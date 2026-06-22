@@ -16,9 +16,9 @@ const SIZE_MAP = {
 
 function getScoreColor(score: number | null): string {
   if (score === null) return "#6b7280";
-  if (score >= 90) return "#10b981"; // emerald-500
-  if (score >= 50) return "#f59e0b"; // amber-500
-  return "#ef4444"; // red-500
+  if (score >= 90) return "#10b981";
+  if (score >= 50) return "#f59e0b";
+  return "#ef4444";
 }
 
 function getTrackColor(score: number | null): string {
@@ -33,64 +33,56 @@ export function ScoreGauge({ score, label, size = "md" }: ScoreGaugeProps) {
   const center = svgSize / 2;
   const circumference = 2 * Math.PI * radius;
 
-  // We draw a 270° arc (¾ of the circle), starting from bottom-left
   const arcFraction = 0.75;
   const arcLen = circumference * arcFraction;
   const gap = circumference - arcLen;
-
   const progress = score === null ? 0 : (score / 100) * arcLen;
-  const dashOffset = arcLen - progress;
 
   const color = getScoreColor(score);
   const trackColor = getTrackColor(score);
 
-  // Rotation: start the arc at the bottom-left (135deg from top)
-  const rotation = 135;
+  // Rotate only the arc group inside SVG — score text stays upright
+  const arcRotation = 135;
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-2 w-full">
       <div className="relative" style={{ width: svgSize, height: svgSize }}>
         <svg
           width={svgSize}
           height={svgSize}
           viewBox={`0 0 ${svgSize} ${svgSize}`}
           className="drop-shadow-sm"
-          style={{ transform: `rotate(${rotation}deg)` }}
+          aria-hidden
         >
-          {/* Track arc */}
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke={trackColor}
-            strokeWidth={stroke}
-            strokeDasharray={`${arcLen} ${gap}`}
-            strokeLinecap="round"
-          />
-          {/* Progress arc */}
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth={stroke}
-            strokeDasharray={`${progress} ${circumference - progress}`}
-            strokeDashoffset={0}
-            strokeLinecap="round"
-            style={{
-              transition: "stroke-dasharray 1s cubic-bezier(0.4,0,0.2,1)",
-              filter: `drop-shadow(0 0 6px ${color}60)`,
-            }}
-          />
+          <g transform={`rotate(${arcRotation} ${center} ${center})`}>
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              fill="none"
+              stroke={trackColor}
+              strokeWidth={stroke}
+              strokeDasharray={`${arcLen} ${gap}`}
+              strokeLinecap="round"
+            />
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              fill="none"
+              stroke={color}
+              strokeWidth={stroke}
+              strokeDasharray={`${progress} ${circumference - progress}`}
+              strokeLinecap="round"
+              style={{
+                transition: "stroke-dasharray 1s cubic-bezier(0.4,0,0.2,1)",
+                filter: `drop-shadow(0 0 6px ${color}60)`,
+              }}
+            />
+          </g>
         </svg>
 
-        {/* Score label in center */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center"
-          style={{ transform: `rotate(-${rotation}deg)` }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span
             className={`${fontSize} font-extrabold tabular-nums leading-none`}
             style={{ color }}
@@ -100,7 +92,7 @@ export function ScoreGauge({ score, label, size = "md" }: ScoreGaugeProps) {
         </div>
       </div>
 
-      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <span className="text-xs font-medium text-muted-foreground text-center leading-snug max-w-[7.5rem]">
         {label}
       </span>
     </div>

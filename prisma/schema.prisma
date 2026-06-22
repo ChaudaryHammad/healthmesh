@@ -43,6 +43,18 @@ enum IssueCategory {
   BROKEN_LINKS
 }
 
+enum BrokenLinkScanMode {
+  INTERNAL
+  EXTERNAL
+}
+
+enum BrokenLinkScanStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
 // ─── USER & AUTH ──────────────────────────────────
 model User {
   id              String    @id @default(cuid())
@@ -140,9 +152,10 @@ model Website {
   updatedAt     DateTime      @updatedAt
   deletedAt     DateTime?     // Soft delete
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scans   Scan[]
-  reports Report[]
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scans            Scan[]
+  reports          Report[]
+  brokenLinkScans  BrokenLinkScan[]
 
   @@index([userId])
   @@index([deletedAt])
@@ -204,6 +217,57 @@ model Issue {
   @@index([category])
   @@index([severity])
   @@map("issues")
+}
+
+// ─── BROKEN LINK SCANS (separate from audit scans) ─
+model BrokenLinkScan {
+  id              String               @id @default(cuid())
+  websiteId       String
+  status          BrokenLinkScanStatus @default(PENDING)
+  mode            BrokenLinkScanMode
+  phase           String?
+  statusMessage   String?              @db.Text
+  pagesDiscovered Int                  @default(0)
+  pagesCrawled    Int                  @default(0)
+  linksFound      Int                  @default(0)
+  linksChecked    Int                  @default(0)
+  brokenCount     Int                  @default(0)
+  progressPercent Float                @default(0)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  errorMessage    String?              @db.Text
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  website Website            @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  results BrokenLinkResult[]
+
+  @@index([websiteId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("broken_link_scans")
+}
+
+model BrokenLinkResult {
+  id            String        @id @default(cuid())
+  scanId        String
+  href          String        @db.Text
+  sourcePageUrl String        @db.Text
+  statusCode    Int?
+  errorMessage  String?
+  elementTag    String?
+  elementId     String?
+  elementClass  String?
+  elementText   String?
+  selector      String?
+  attribute     String?
+  severity      IssueSeverity @default(MAJOR)
+  createdAt     DateTime      @default(now())
+
+  scan BrokenLinkScan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@map("broken_link_results")
 }
 
 // ─── REPORTS ─────────────────────────────────────

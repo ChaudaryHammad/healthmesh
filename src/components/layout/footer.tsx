@@ -6,7 +6,7 @@ import { NewsletterForm } from "../marketing/newsletter-form";
 export function Footer() {
   return (
     <footer className="bg-card border-t border-border/40 select-none">
-      <div className="max-w-7xl mx-auto px-6 py-12 md:py-16 grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+      <div className="max-w-[88rem] mx-auto px-6 py-12 md:py-16 grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
         {/* Brand Column */}
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-3">
@@ -14,14 +14,14 @@ export function Footer() {
               <Activity className="w-4 h-4" />
             </div>
             <span className="font-bold text-sm tracking-tight text-foreground">
-              HealthMonitor
+              LoopNode
             </span>
           </Link>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Enterprise-grade website monitoring SaaS. Scans performance, accessibility, SEO, security, and links to keep your sites in peak condition.
+            Website health monitoring powered by Lighthouse and axe-core. Audit performance, accessibility, SEO, security, and broken links from one dashboard.
           </p>
           <p className="text-xs text-muted-foreground/60">
-            &copy; {new Date().getFullYear()} HealthMonitor. All rights reserved.
+            &copy; {new Date().getFullYear()} LoopNode. All rights reserved.
           </p>
         </div>
 
@@ -62,8 +62,8 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/docs" className="hover:text-foreground transition-colors">
-                Developer API Docs
+              <Link href="/pricing" className="hover:text-foreground transition-colors">
+                Pricing
               </Link>
             </li>
           </ul>

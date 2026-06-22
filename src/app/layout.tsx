@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Website Health Monitor | Advanced Site Audits",
-    template: "%s | Website Health Monitor",
+    default: "LoopNode — Website health monitoring & audits",
+    template: "%s | LoopNode",
   },
   description:
-    "A production-ready SaaS to scan, analyze, and monitor your website's performance, accessibility, SEO, security, and broken links. Get actionable reports instantly.",
+    "Monitor performance, accessibility, SEO, and security with real Lighthouse and axe-core audits. Crawl broken links and track scores over time.",
 };
 
 export default function RootLayout({
@@ -29,18 +29,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme'),d=!t||t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.add(d?'dark':'light')}catch(e){document.documentElement.classList.add('dark')}})();`,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
         suppressHydrationWarning
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
       </body>
     </html>
   );

@@ -1,6 +1,12 @@
 "use server";
 
 import { z } from "zod";
+import { sendEmail } from "@/lib/email/send-email";
+import { getSupportEmail } from "@/lib/email/config";
+import {
+  renderContactConfirmationEmail,
+  renderContactSupportEmail,
+} from "@/lib/email/templates";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -9,7 +15,7 @@ const contactSchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters."),
 });
 
-export async function submitContactForm(values: any) {
+export async function submitContactForm(values: unknown) {
   const parsed = contactSchema.safeParse(values);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -18,16 +24,26 @@ export async function submitContactForm(values: any) {
   const { name, email, subject, message } = parsed.data;
 
   try {
-    // Log contact form details (mock system support dispatch for Phase 1-2)
-    console.log(`[CONTACT FORM SUBMIT] Name: ${name}, Email: ${email}, Subject: ${subject}`);
-    console.log(`[CONTACT FORM MESSAGE] ${message}`);
+    const supportEmail = getSupportEmail();
 
-    // In a real production system, we would trigger a Resend email to support:
-    // resend.emails.send({ from: 'support@whm.dev', to: 'support@whm.dev', subject, html: ... })
+    const supportMail = renderContactSupportEmail({ name, email, subject, message });
+    await sendEmail({
+      to: supportEmail,
+      subject: supportMail.subject,
+      html: supportMail.html,
+      replyTo: email,
+    });
 
-    return { 
-      success: true, 
-      message: "Thank you for contacting us! Our support team will get back to you shortly." 
+    const confirmationMail = renderContactConfirmationEmail({ name });
+    await sendEmail({
+      to: email,
+      subject: confirmationMail.subject,
+      html: confirmationMail.html,
+    });
+
+    return {
+      success: true,
+      message: "Thank you for contacting us! Our support team will get back to you shortly.",
     };
   } catch (error) {
     console.error("Contact form error:", error);

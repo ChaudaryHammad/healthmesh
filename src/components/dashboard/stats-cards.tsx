@@ -1,5 +1,12 @@
 import React from "react";
-import { Globe, AlertTriangle, Play, ShieldAlert, BadgeCheck, Eye } from "lucide-react";
+import { Globe, AlertTriangle, Play, ShieldAlert, BadgeCheck } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface StatsCardsProps {
   totalWebsites: number;
@@ -42,8 +49,7 @@ export function StatsCards({
       title: "Accessibility Issues",
       value: accessibilityIssues,
       description: "A11y parsing warnings",
-      icon: Eye, // Wait, import Eye from lucide-react if we use it, let's use AlertTriangle instead
-      iconComponent: AlertTriangle,
+      icon: AlertTriangle,
       color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
     },
     {
@@ -56,32 +62,26 @@ export function StatsCards({
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 select-none">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
       {cards.map((card, idx) => {
-        const Icon = card.iconComponent || card.icon;
+        const Icon = card.icon;
         return (
-          <div
-            key={idx}
-            className="bg-card border border-border/30 rounded-2xl p-5 space-y-4 hover:border-border/80 hover:shadow-lg transition-all duration-300"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground tracking-tight">
+          <Card key={idx} className="border-border/30 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardDescription className="text-xs font-semibold tracking-tight">
                 {card.title}
-              </span>
+              </CardDescription>
               <div className={`flex items-center justify-center w-8 h-8 rounded-lg border ${card.color}`}>
                 <Icon className="w-4 h-4" />
               </div>
-            </div>
-            
-            <div className="space-y-1">
-              <span className="text-2xl font-extrabold text-foreground tracking-tight">
-                {card.value}
-              </span>
-              <p className="text-[10px] text-muted-foreground leading-none">
+            </CardHeader>
+            <CardContent>
+              <CardTitle className="text-2xl font-extrabold tabular-nums">{card.value}</CardTitle>
+              <CardDescription className="text-[10px] leading-none mt-1">
                 {card.description}
-              </p>
-            </div>
-          </div>
+              </CardDescription>
+            </CardContent>
+          </Card>
         );
       })}
     </div>

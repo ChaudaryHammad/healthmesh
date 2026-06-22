@@ -35,6 +35,10 @@ export default async function WebsiteOverviewPage({ params }: Props) {
           },
         },
       },
+      brokenLinkScans: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
     },
   });
 
@@ -70,6 +74,24 @@ export default async function WebsiteOverviewPage({ params }: Props) {
     criticalCount: s.issues.filter((i) => i.severity === "CRITICAL").length,
   }));
 
+  const latestBrokenLinkScan = website.brokenLinkScans[0] ?? null;
+
+  const serializedBrokenLinkScan = latestBrokenLinkScan
+    ? {
+        id: latestBrokenLinkScan.id,
+        status: latestBrokenLinkScan.status,
+        mode: latestBrokenLinkScan.mode,
+        brokenCount: latestBrokenLinkScan.brokenCount,
+        linksChecked: latestBrokenLinkScan.linksChecked,
+        linksFound: latestBrokenLinkScan.linksFound,
+        pagesCrawled: latestBrokenLinkScan.pagesCrawled,
+        progressPercent: latestBrokenLinkScan.progressPercent,
+        statusMessage: latestBrokenLinkScan.statusMessage,
+        completedAt: latestBrokenLinkScan.completedAt,
+        createdAt: latestBrokenLinkScan.createdAt,
+      }
+    : null;
+
   const handleScan = async () => {
     "use server";
     await triggerScanAction(id);
@@ -79,6 +101,7 @@ export default async function WebsiteOverviewPage({ params }: Props) {
     <WebsiteOverviewClient
       website={serializedWebsite}
       scans={serializedScans}
+      latestBrokenLinkScan={serializedBrokenLinkScan}
       onScanTrigger={handleScan}
     />
   );

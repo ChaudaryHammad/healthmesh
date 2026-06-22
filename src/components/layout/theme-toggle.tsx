@@ -1,37 +1,33 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 import { Sun, Moon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Avoid hydration mismatch by waiting for mount
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return (
-      <div className="w-9 h-9 rounded-xl bg-secondary/30 border border-border/20" />
-    );
+  if (!mounted || !resolvedTheme) {
+    return <Skeleton className="w-9 h-9 rounded-lg" />;
   }
 
-  const isDark = theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark = resolvedTheme === "dark";
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="icon"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="flex items-center justify-center w-9 h-9 rounded-xl bg-secondary/30 border border-border/20 text-muted-foreground hover:text-foreground hover:border-border/80 transition-all cursor-pointer"
       title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
     >
-      {isDark ? (
-        <Sun className="w-4 h-4 transition-transform hover:rotate-45" />
-      ) : (
-        <Moon className="w-4 h-4 transition-transform hover:-rotate-12" />
-      )}
-    </button>
+      {isDark ? <Sun /> : <Moon />}
+    </Button>
   );
 }

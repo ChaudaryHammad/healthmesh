@@ -46,16 +46,23 @@ AUTH_SECRET="your-random-secret-here"
 # ─────────────────────────────────────────────
 # APP URL
 # ─────────────────────────────────────────────
-NEXTAUTH_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+AUTH_URL="http://localhost:3000"
 
 # ─────────────────────────────────────────────
-# EMAIL (for password reset / verify email)
+# EMAIL
 # ─────────────────────────────────────────────
+# Shown as the sender on all emails (required)
+EMAIL_FROM="LoopNode <your-gmail@gmail.com>"
+
+# Gmail / personal address → SMTP (required for @gmail.com, @yahoo.com, etc.)
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_USER="your-gmail@gmail.com"
-SMTP_PASS="your-gmail-app-password"
-SMTP_FROM="Website Health Monitor <your-gmail@gmail.com>"
+SMTP_PASS="your-google-app-password"
+
+# Optional: inbox for contact form submissions (defaults to EMAIL_FROM)
+# SUPPORT_EMAIL="support@yourdomain.com"
 ```
 
 ---
@@ -114,43 +121,55 @@ Paste the output as `AUTH_SECRET`.
 
 ---
 
-### 3C — Email (SMTP) — For Password Reset & Email Verify
+### 3C — Email via SMTP (verify, password reset, contact form, newsletter)
 
-**Option A: Gmail (Free — recommended for dev)**
+All emails are sent through **SMTP**. Add these to **`.env.local`**:
 
-1. Go to your Google Account → https://myaccount.google.com
-2. Navigate to **Security → 2-Step Verification** → turn it ON
-3. Then go to **Security → App Passwords**
-4. Select app: **Mail**, device: **Windows Computer** → Generate
-5. Copy the 16-character app password (e.g. `abcd efgh ijkl mnop` — remove spaces)
-6. Set in `.env.local`:
-   ```env
-   SMTP_HOST="smtp.gmail.com"
-   SMTP_PORT="587"
-   SMTP_USER="your-gmail@gmail.com"
-   SMTP_PASS="abcdefghijklmnop"
-   SMTP_FROM="Health Monitor <your-gmail@gmail.com>"
-   ```
+```env
+EMAIL_FROM="LoopNode <your-gmail@gmail.com>"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="your-gmail@gmail.com"
+SMTP_PASS="your-google-app-password"
+```
 
-**Option B: Resend (Free 3000 emails/month — better for production)**
+#### Gmail setup
 
-1. Go to https://resend.com → Sign up (free)
-2. Go to **API Keys** → Create API Key
-3. Install: `npm install resend`
-4. Update the email action in `src/lib/email.ts` to use the Resend SDK
+1. Go to https://myaccount.google.com
+2. **Security → 2-Step Verification** → turn it ON
+3. **Security → App Passwords** → create one for **Mail**
+4. Copy the 16-character password (remove spaces) → `SMTP_PASS`
 
-**Option C: Mailhog (Local dev only — no real emails)**
+#### Optional
+
+```env
+SUPPORT_EMAIL="support@yourdomain.com"
+```
+
+Contact form emails go here; defaults to `EMAIL_FROM` if omitted.
+
+#### `.env` vs `.env.local`
+
+| File | Purpose |
+|---|---|
+| **`.env.local`** | Real secrets for local dev (git-ignored) |
+| **`.env`** | Prisma / template only — no real passwords |
+| **`.env.example`** | Reference list of all keys |
+
+#### Mailhog (local testing — no real delivery)
 
 1. Install: https://github.com/mailhog/MailHog/releases
-2. Run `MailHog.exe` — it captures all outgoing emails locally
-3. Set:
-   ```env
-   SMTP_HOST="localhost"
-   SMTP_PORT="1025"
-   SMTP_USER=""
-   SMTP_PASS=""
-   SMTP_FROM="test@test.com"
-   ```
+2. Run `MailHog.exe`
+3. In `.env.local`:
+
+```env
+EMAIL_FROM="LoopNode <test@test.com>"
+SMTP_HOST="localhost"
+SMTP_PORT="1025"
+SMTP_USER="test"
+SMTP_PASS="test"
+```
+
 4. View captured emails at http://localhost:8025
 
 ---
@@ -223,17 +242,13 @@ Open http://localhost:3000
 
 ## Testing the Scan Engine
 
-Since this is a **mock scan engine** (no real Lighthouse/crawler yet):
+The audit engine runs **real scans** using Lighthouse (performance), axe-core (accessibility), Cheerio (SEO), and HTTP header checks (security). Broken links are checked separately on the Broken Links page.
 
-1. Go to `/dashboard/websites` → Connect a Website (any URL works, e.g. `https://example.com`)
-2. Click the website card → go to Overview
-3. Click **Run Audit**
-4. The page will reload with realistic randomly-generated scores + issues
+1. Go to `/dashboard/websites` → Connect a Website
+2. Open the website → click **Run Audit** (Lighthouse + axe + SEO + security)
+3. For broken links, go to **Broken Links** → choose Internal or External → **Check Broken Links**
 
-Each audit generates:
-- Scores 0–100 for Performance, Accessibility, SEO, Security
-- Core Web Vitals: FCP, LCP, CLS, INP, TBT
-- 1–4 issues per category with real descriptions + recommendations
+> Audits can take 30–90 seconds. Broken link scans crawl all internal pages and show live progress.
 
 ---
 
@@ -252,6 +267,19 @@ Run `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 # Kill the process using port 3000
 npx kill-port 3000
 npm run dev
+```
+
+### `Could not find Chrome` when running audits
+Puppeteer needs Chrome for Lighthouse and accessibility scans.
+
+```bash
+npx puppeteer browsers install chrome
+```
+
+If you already have Google Chrome installed, audits will also try to use it automatically. You can point to a custom binary with:
+
+```env
+CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
 ```
 
 ### TypeScript errors in VS Code about missing modules

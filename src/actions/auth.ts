@@ -3,21 +3,21 @@
 import { signIn, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { 
-  loginSchema, 
-  registerSchema, 
-  forgotPasswordSchema, 
-  resetPasswordSchema 
+import {
+  loginSchema,
+  registerSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "@/lib/validations/auth";
 import { AuthError } from "next-auth";
-import { resend } from "@/lib/resend";
-
-
-// Generate a random token for emails
-function generateToken() {
-  // Simple random token generator since we run in Node
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-}
+import { sendEmail, EmailSendError } from "@/lib/email/send-email";
+import { getAppUrl } from "@/lib/email/config";
+import { generateSecureToken } from "@/lib/email/tokens";
+import {
+  renderVerifyEmailEmail,
+  renderPasswordResetEmail,
+  renderPasswordResetSuccessEmail,
+} from "@/lib/email/templates";
 
 export async function loginAction(values: any) {
   const parsed = loginSchema.safeParse(values);
@@ -54,13 +54,11 @@ export async function registerAction(values: any) {
   }
 
   const { name, email, password } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
 
   try {
-    // Check if user already exists (including soft-deleted)
     const existingUser = await prisma.user.findFirst({
-      where: {
-        email: email.toLowerCase(),
-      },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -70,54 +68,63 @@ export async function registerAction(values: any) {
       return { success: false, error: "An account with this email already exists." };
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         name,
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         hashedPassword,
         role: "USER",
       },
     });
 
-    // Create verification token
-    const token = generateToken();
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const token = generateSecureToken();
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await prisma.emailVerificationToken.create({
       data: {
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         token,
         expires,
       },
     });
 
-    // Create Audit Log
     await prisma.activityLog.create({
       data: {
         userId: user.id,
         action: "USER_REGISTERED",
-        description: `User account created for ${email}`,
+        description: `User account created for ${normalizedEmail}`,
       },
     });
 
-await resend.emails.send({
-  from: "LoopNode <[EMAIL_ADDRESS]>",
-  to: email,
-  subject: "Verify your email",
-  html: `
-    <p>Click to verify:</p>
-    <a href="http://localhost:3000/verify-email?token=${token}">
-      Verify Email
-    </a>
-  `,
-});
-    return { 
-      success: true, 
-      message: "Account created successfully! Please check your email to verify your account." 
+    const verifyUrl = `${getAppUrl()}/verify-email?token=${token}`;
+    const { subject, html } = renderVerifyEmailEmail({ name: name ?? "", verifyUrl });
+
+    try {
+      await sendEmail({
+        to: normalizedEmail,
+        subject,
+        html,
+      });
+    } catch (emailError) {
+      await prisma.emailVerificationToken.deleteMany({ where: { email: normalizedEmail } });
+      await prisma.activityLog.deleteMany({ where: { userId: user.id } });
+      await prisma.user.delete({ where: { id: user.id } });
+
+      if (emailError instanceof EmailSendError) {
+        return {
+          success: false,
+          error:
+            "We couldn't send the verification email. Check your SMTP settings in .env.local and try again.",
+        };
+      }
+      throw emailError;
+    }
+
+    return {
+      success: true,
+      message: "Account created successfully! Please check your email to verify your account.",
     };
   } catch (error) {
     console.error("Registration error:", error);
@@ -136,64 +143,47 @@ export async function forgotPasswordAction(values: any) {
   }
 
   const { email } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
 
   try {
     const user = await prisma.user.findFirst({
       where: {
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         deletedAt: null,
       },
     });
 
     if (!user) {
-      // Return success even if email is not found to prevent user enumeration
-      return { success: true, message: "If an account exists with this email, a password reset link has been sent." };
+      return {
+        success: true,
+        message: "If an account exists with this email, a password reset link has been sent.",
+      };
     }
 
-    // Generate password reset token
-    const token = generateToken();
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const token = generateSecureToken();
+    const expires = new Date(Date.now() + 60 * 60 * 1000);
 
     await prisma.passwordResetToken.create({
       data: {
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         token,
         expires,
       },
     });
 
-   await resend.emails.send({
-      from: "Your App <onboarding@resend.dev>", // change later to verified domain
-      to: email,
-      subject: "Reset your password",
-      html: `
-        <div style="font-family: Arial; line-height: 1.5">
-          <h2>Password Reset Request</h2>
-          <p>You requested to reset your password.</p>
-          <p>Click the button below to continue:</p>
+    const resetUrl = `${getAppUrl()}/reset-password?token=${token}`;
+    const { subject, html } = renderPasswordResetEmail({ resetUrl });
 
-          <a 
-            href="http://localhost:3000/reset-password?token=${token}" 
-            style="
-              display:inline-block;
-              padding:10px 15px;
-              background:#000;
-              color:#fff;
-              text-decoration:none;
-              border-radius:6px;
-            "
-          >
-            Reset Password
-          </a>
-
-          <p style="margin-top:20px; font-size:12px; color:#666">
-            This link expires in 1 hour.
-          </p>
-        </div>
-      `,
+    await sendEmail({
+      to: normalizedEmail,
+      subject,
+      html,
     });
 
-    return { success: true, message: "If an account exists with this email, a password reset link has been sent." };
+    return {
+      success: true,
+      message: "If an account exists with this email, a password reset link has been sent.",
+    };
   } catch (error) {
     console.error("Forgot password error:", error);
     return { success: false, error: "Failed to process forgot password request." };
@@ -209,7 +199,6 @@ export async function resetPasswordAction(token: string, values: any) {
   const { password } = parsed.data;
 
   try {
-    // Find token
     const dbToken = await prisma.passwordResetToken.findUnique({
       where: { token },
     });
@@ -218,7 +207,6 @@ export async function resetPasswordAction(token: string, values: any) {
       return { success: false, error: "Reset token is invalid or has expired." };
     }
 
-    // Find user
     const user = await prisma.user.findFirst({
       where: {
         email: dbToken.email,
@@ -230,21 +218,17 @@ export async function resetPasswordAction(token: string, values: any) {
       return { success: false, error: "No active user account found for this reset request." };
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Update user
     await prisma.user.update({
       where: { id: user.id },
       data: { hashedPassword },
     });
 
-    // Delete token after use
     await prisma.passwordResetToken.delete({
       where: { id: dbToken.id },
     });
 
-    // Log success
     await prisma.activityLog.create({
       data: {
         userId: user.id,
@@ -253,7 +237,14 @@ export async function resetPasswordAction(token: string, values: any) {
       },
     });
 
-    console.log(`[MOCK EMAIL: PASSWORD_RESET_SUCCESS] Password reset confirmation email sent to ${dbToken.email}`);
+    const loginUrl = `${getAppUrl()}/login`;
+    const { subject, html } = renderPasswordResetSuccessEmail({ loginUrl });
+
+    await sendEmail({
+      to: dbToken.email,
+      subject,
+      html,
+    });
 
     return { success: true, message: "Password reset successful! You can now log in." };
   } catch (error) {
@@ -272,7 +263,6 @@ export async function verifyEmailAction(token: string) {
       return { success: false, error: "Verification token is invalid or has expired." };
     }
 
-    // Find user
     const user = await prisma.user.findFirst({
       where: {
         email: dbToken.email,
@@ -284,18 +274,15 @@ export async function verifyEmailAction(token: string) {
       return { success: false, error: "No active user account found for this verification request." };
     }
 
-    // Update user
     await prisma.user.update({
       where: { id: user.id },
       data: { emailVerified: new Date() },
     });
 
-    // Delete token
     await prisma.emailVerificationToken.delete({
       where: { id: dbToken.id },
     });
 
-    // Log success
     await prisma.activityLog.create({
       data: {
         userId: user.id,

@@ -14,6 +14,7 @@ import {
   LogOut
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
+import { Button } from "@/components/ui/button";
 
 interface MobileNavProps {
   isOpen: boolean;
@@ -55,7 +56,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               <Activity className="w-4 h-4" />
             </div>
             <span className="font-bold text-sm tracking-tight">
-              HealthMonitor
+              LoopNode
             </span>
           </Link>
           <button
@@ -91,13 +92,14 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
 
         {/* Logout button in drawer footer */}
         <div className="p-4 border-t border-border/40">
-          <button
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={() => logoutAction()}
-            className="flex items-center w-full gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 hover:text-destructive transition-all cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>Log Out</span>
-          </button>
+          </Button>
         </div>
       </div>
     </div>

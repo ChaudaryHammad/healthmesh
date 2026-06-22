@@ -2,12 +2,15 @@ import { z } from "zod";
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid URL"),
-  
+
   AUTH_SECRET: z.string().min(1, "AUTH_SECRET is required"),
   AUTH_URL: z.string().url("AUTH_URL must be a valid URL").optional(),
 
-  RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
   EMAIL_FROM: z.string().min(1, "EMAIL_FROM is required"),
+  SMTP_HOST: z.string().min(1, "SMTP_HOST is required"),
+  SMTP_PORT: z.coerce.number().int().positive("SMTP_PORT must be a positive number"),
+  SMTP_USER: z.string().min(1, "SMTP_USER is required"),
+  SMTP_PASS: z.string().min(1, "SMTP_PASS is required"),
 
   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1, "Cloudinary cloud name is required"),
   NEXT_PUBLIC_CLOUDINARY_API_KEY: z.string().min(1, "Cloudinary API key is required"),
@@ -35,8 +38,11 @@ const getEnvData = () => {
       DATABASE_URL: process.env.DATABASE_URL,
       AUTH_SECRET: process.env.AUTH_SECRET,
       AUTH_URL: process.env.AUTH_URL,
-      RESEND_API_KEY: process.env.RESEND_API_KEY,
       EMAIL_FROM: process.env.EMAIL_FROM,
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASS: process.env.SMTP_PASS,
       NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
       NEXT_PUBLIC_CLOUDINARY_API_KEY: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
       CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
@@ -63,5 +69,5 @@ if (!parsed.success) {
   throw new Error("Invalid environment variables. Please check your .env.local file.");
 }
 
-export const env = parsed.data as any;
+export const env = parsed.data as z.infer<typeof envSchema>;
 export type EnvType = z.infer<typeof envSchema>;

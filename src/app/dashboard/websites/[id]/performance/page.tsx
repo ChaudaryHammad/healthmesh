@@ -2,8 +2,8 @@ import React from "react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { AuditPageClient } from "@/components/websites/audit-page-client";
-import { Zap } from "lucide-react";
+import { PerformanceAuditClient } from "@/components/websites/performance-audit-client";
+import type { AuditIssue } from "@/components/websites/audit-shared";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -37,28 +37,36 @@ export default async function PerformancePage({ params }: Props) {
     },
   });
 
+  const issues: AuditIssue[] =
+    latestScan?.issues.map((i) => ({
+      id: i.id,
+      severity: i.severity as AuditIssue["severity"],
+      title: i.title,
+      description: i.description,
+      selector: i.selector,
+      url: i.url,
+      recommendation: i.recommendation,
+    })) ?? [];
+
+  const metrics = latestScan
+    ? {
+        fcp: latestScan.fcp,
+        lcp: latestScan.lcp,
+        cls: latestScan.cls,
+        inp: latestScan.inp,
+        tbt: latestScan.tbt,
+      }
+    : null;
+
   return (
-    <AuditPageClient
+    <PerformanceAuditClient
       websiteId={website.id}
       websiteName={website.name}
       websiteUrl={website.url}
-      category="PERFORMANCE"
-      categoryLabel="Performance"
       score={latestScan?.performanceScore ?? null}
-      icon={<Zap className="w-4 h-4" />}
-      accentClass="text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-      issues={
-        latestScan?.issues.map((i) => ({
-          id: i.id,
-          severity: i.severity as any,
-          title: i.title,
-          description: i.description,
-          selector: i.selector,
-          url: i.url,
-          recommendation: i.recommendation,
-        })) ?? []
-      }
+      issues={issues}
       lastScanned={latestScan?.completedAt?.toISOString() ?? null}
+      metrics={metrics}
     />
   );
 }

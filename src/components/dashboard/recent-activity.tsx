@@ -1,5 +1,6 @@
 import React from "react";
 import { Activity, Clock, PlusCircle, RefreshCw, Trash, UserCheck } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Log {
   id: string;
@@ -34,43 +35,42 @@ export function RecentActivity({ logs }: RecentActivityProps) {
 
   const formatRelativeTime = (date: Date) => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    
+
     let interval = Math.floor(seconds / 31536000);
     if (interval >= 1) return `${interval}y ago`;
-    
+
     interval = Math.floor(seconds / 2592000);
     if (interval >= 1) return `${interval}mo ago`;
-    
+
     interval = Math.floor(seconds / 86400);
     if (interval >= 1) return `${interval}d ago`;
-    
+
     interval = Math.floor(seconds / 3600);
     if (interval >= 1) return `${interval}h ago`;
-    
+
     interval = Math.floor(seconds / 60);
     if (interval >= 1) return `${interval}m ago`;
-    
+
     return "just now";
   };
 
   return (
-    <div className="bg-card border border-border/30 rounded-3xl p-6 space-y-5 flex flex-col h-[380px] select-none">
-      <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-        <Clock className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: "10s" }} />
-        Recent Activity
-      </h3>
+    <Card className="rounded-3xl border-border/30 flex flex-col h-[380px]">
+      <CardHeader>
+        <CardTitle className="text-sm font-bold flex items-center gap-2">
+          <Clock className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: "10s" }} />
+          Recent Activity
+        </CardTitle>
+      </CardHeader>
 
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+      <CardContent className="flex-1 overflow-y-auto space-y-4 pr-1">
         {logs.length > 0 ? (
           <div className="relative border-l border-border/20 pl-4 ml-2.5 space-y-5">
             {logs.map((log) => (
               <div key={log.id} className="relative group">
-                {/* Timeline Icon Node */}
                 <div className="absolute -left-[27.5px] top-0.5 flex items-center justify-center w-6 h-6 rounded-full bg-card border border-border/40 group-hover:border-border/80 transition-colors">
                   {getActionIcon(log.action)}
                 </div>
-                
-                {/* Log Meta */}
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-foreground leading-tight">
                     {log.description || log.action.replace("_", " ")}
@@ -88,7 +88,7 @@ export function RecentActivity({ logs }: RecentActivityProps) {
             <p className="text-xs">No activity logs recorded yet.</p>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

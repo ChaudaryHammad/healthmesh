@@ -2,8 +2,10 @@ import React from "react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { AuditPageClient } from "@/components/websites/audit-page-client";
+import { SecurityAuditClient } from "@/components/websites/security-audit-client";
+import { fetchSecurityHeaderAudit } from "@/lib/security/fetch-security-headers";
 import { Shield } from "lucide-react";
+import type { AuditIssue } from "@/components/websites/audit-shared";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -26,39 +28,40 @@ export default async function SecurityPage({ params }: Props) {
   });
   if (!website) notFound();
 
-  const latestScan = await prisma.scan.findFirst({
-    where: { websiteId: id, status: "COMPLETED" },
-    orderBy: { createdAt: "desc" },
-    include: {
-      issues: {
-        where: { category: "SECURITY" },
-        orderBy: [{ severity: "asc" }, { createdAt: "desc" }],
+  const [latestScan, headerAudit] = await Promise.all([
+    prisma.scan.findFirst({
+      where: { websiteId: id, status: "COMPLETED" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        issues: {
+          where: { category: "SECURITY" },
+          orderBy: [{ severity: "asc" }, { createdAt: "desc" }],
+        },
       },
-    },
-  });
+    }),
+    fetchSecurityHeaderAudit(website.url),
+  ]);
+
+  const issues: AuditIssue[] =
+    latestScan?.issues.map((i) => ({
+      id: i.id,
+      severity: i.severity as AuditIssue["severity"],
+      title: i.title,
+      description: i.description,
+      selector: i.selector,
+      url: i.url,
+      recommendation: i.recommendation,
+    })) ?? [];
 
   return (
-    <AuditPageClient
+    <SecurityAuditClient
       websiteId={website.id}
       websiteName={website.name}
       websiteUrl={website.url}
-      category="SECURITY"
-      categoryLabel="Security"
       score={latestScan?.securityScore ?? null}
-      icon={<Shield className="w-4 h-4" />}
-      accentClass="text-rose-400 bg-rose-500/10 border-rose-500/20"
-      issues={
-        latestScan?.issues.map((i) => ({
-          id: i.id,
-          severity: i.severity as any,
-          title: i.title,
-          description: i.description,
-          selector: i.selector,
-          url: i.url,
-          recommendation: i.recommendation,
-        })) ?? []
-      }
+      issues={issues}
       lastScanned={latestScan?.completedAt?.toISOString() ?? null}
+      headerAudit={headerAudit}
     />
   );
 }

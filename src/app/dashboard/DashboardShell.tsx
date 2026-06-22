@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -17,9 +19,19 @@ interface DashboardShellProps {
 
 export function DashboardShell({ children, user }: DashboardShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    main.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    main.focus({ preventScroll: true });
+  }, [pathname]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background">
+    <TooltipProvider>
+      <div className="flex h-screen w-screen overflow-hidden bg-background">
       {/* Desktop Collapsible Sidebar */}
       <Sidebar />
 
@@ -32,12 +44,17 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
         <Topbar user={user} onMenuClick={() => setMobileNavOpen(true)} />
 
         {/* Scrollable Content Pane */}
-        <main className="flex-1 overflow-y-auto px-6 py-8">
+        <main
+          ref={mainRef}
+          tabIndex={-1}
+          className="flex-1 overflow-y-auto px-6 py-8 outline-none"
+        >
           <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-300">
             {children}
           </div>
         </main>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }

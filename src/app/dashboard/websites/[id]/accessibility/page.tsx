@@ -2,8 +2,8 @@ import React from "react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { AuditPageClient } from "@/components/websites/audit-page-client";
-import { Eye } from "lucide-react";
+import { AccessibilityAuditClient } from "@/components/websites/accessibility-audit-client";
+import type { AuditIssue } from "@/components/websites/audit-shared";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -37,27 +37,24 @@ export default async function AccessibilityPage({ params }: Props) {
     },
   });
 
+  const issues: AuditIssue[] =
+    latestScan?.issues.map((i) => ({
+      id: i.id,
+      severity: i.severity as AuditIssue["severity"],
+      title: i.title,
+      description: i.description,
+      selector: i.selector,
+      url: i.url,
+      recommendation: i.recommendation,
+    })) ?? [];
+
   return (
-    <AuditPageClient
+    <AccessibilityAuditClient
       websiteId={website.id}
       websiteName={website.name}
       websiteUrl={website.url}
-      category="ACCESSIBILITY"
-      categoryLabel="Accessibility"
       score={latestScan?.accessibilityScore ?? null}
-      icon={<Eye className="w-4 h-4" />}
-      accentClass="text-violet-400 bg-violet-500/10 border-violet-500/20"
-      issues={
-        latestScan?.issues.map((i) => ({
-          id: i.id,
-          severity: i.severity as any,
-          title: i.title,
-          description: i.description,
-          selector: i.selector,
-          url: i.url,
-          recommendation: i.recommendation,
-        })) ?? []
-      }
+      issues={issues}
       lastScanned={latestScan?.completedAt?.toISOString() ?? null}
     />
   );

@@ -7,6 +7,11 @@ import Link from "next/link";
 import { loginSchema } from "@/lib/validations/auth";
 import { loginAction } from "@/actions/auth";
 import { Activity, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +21,8 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -26,7 +33,7 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: { email: string; password: string; rememberMe?: boolean }) => {
     setError(null);
     startTransition(async () => {
       const response = await loginAction(data);
@@ -38,7 +45,6 @@ export default function LoginPage() {
 
   return (
     <div className="w-full">
-      {/* Brand Logo & Heading */}
       <div className="flex flex-col items-center text-center mb-8">
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary mb-4 animate-pulse">
           <Activity className="w-6 h-6" />
@@ -47,114 +53,106 @@ export default function LoginPage() {
           Welcome Back
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Monitor your website's performance and health
+          Sign in to your LoopNode dashboard
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in fade-in slide-in-from-top-1 duration-200">
-          {error}
-        </div>
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Login Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">
-            Email address
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="email">Email address</Label>
+          <Input
+            id="email"
             type="email"
             placeholder="you@example.com"
             disabled={isPending}
-            className={`w-full px-4 py-2.5 rounded-xl bg-secondary/30 border ${
-              errors.email ? "border-destructive" : "border-border/40"
-            } text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/80 focus:ring-2 focus:ring-primary/20 disabled:opacity-50`}
+            aria-invalid={!!errors.email}
             {...register("email")}
           />
           {errors.email && (
-            <p className="text-xs text-destructive mt-1">{errors.email.message as string}</p>
+            <p className="text-xs text-destructive">{errors.email.message as string}</p>
           )}
         </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-1.5">
-            <label className="block text-sm font-medium text-foreground">
-              Password
-            </label>
-            <Link
-              href="/forgot-password"
-              className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="password">Password</Label>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs"
+              render={<Link href="/forgot-password" />}
+              nativeButton={false}
             >
               Forgot password?
-            </Link>
+            </Button>
           </div>
           <div className="relative">
-            <input
+            <Input
+              id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               disabled={isPending}
-              className={`w-full pl-4 pr-11 py-2.5 rounded-xl bg-secondary/30 border ${
-                errors.password ? "border-destructive" : "border-border/40"
-              } text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/80 focus:ring-2 focus:ring-primary/20 disabled:opacity-50`}
+              aria-invalid={!!errors.password}
+              className="pr-10"
               {...register("password")}
             />
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               tabIndex={-1}
               disabled={isPending}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors outline-none"
+              className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+              {showPassword ? <EyeOff /> : <Eye />}
+            </Button>
           </div>
           {errors.password && (
-            <p className="text-xs text-destructive mt-1">{errors.password.message as string}</p>
+            <p className="text-xs text-destructive">{errors.password.message as string}</p>
           )}
         </div>
 
-        <div className="flex items-center">
-          <input
+        <div className="flex items-center gap-2">
+          <Checkbox
             id="rememberMe"
-            type="checkbox"
             disabled={isPending}
-            className="w-4 h-4 rounded border-border/40 bg-secondary/30 text-primary accent-primary outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 cursor-pointer"
-            {...register("rememberMe")}
+            checked={watch("rememberMe")}
+            onCheckedChange={(checked) => setValue("rememberMe", !!checked)}
           />
-          <label
-            htmlFor="rememberMe"
-            className="ml-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none"
-          >
+          <Label htmlFor="rememberMe" className="font-normal text-muted-foreground cursor-pointer">
             Remember me
-          </label>
+          </Label>
         </div>
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full flex items-center justify-center px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/20 hover:bg-primary/95 active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-        >
+        <Button type="submit" disabled={isPending} className="w-full" size="lg">
           {isPending ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="animate-spin" />
               Signing in...
             </>
           ) : (
             "Sign In"
           )}
-        </button>
+        </Button>
       </form>
 
-      {/* Footer Link */}
       <p className="text-center text-sm text-muted-foreground mt-8">
         Don&apos;t have an account?{" "}
-        <Link
-          href="/register"
-          className="font-semibold text-primary hover:text-primary/80 transition-colors"
+        <Button
+          variant="link"
+          className="h-auto p-0 font-semibold"
+          render={<Link href="/register" />}
+          nativeButton={false}
         >
           Create one now
-        </Link>
+        </Button>
       </p>
     </div>
   );

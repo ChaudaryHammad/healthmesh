@@ -1,6 +1,23 @@
 import React from "react";
 import Link from "next/link";
 import { Activity, ArrowRight, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { formatDateTime } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Scan {
   id: string;
@@ -18,117 +35,111 @@ interface RecentScansProps {
   scans: Scan[];
 }
 
-export function RecentScans({ scans }: RecentScansProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-500 uppercase tracking-wide">
-            <CheckCircle2 className="w-3 h-3" />
-            Success
-          </span>
-        );
-      case "FAILED":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-destructive/10 border border-destructive/20 text-[10px] font-bold text-destructive uppercase tracking-wide">
-            <XCircle className="w-3 h-3" />
-            Failed
-          </span>
-        );
-      case "RUNNING":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-bold text-cyan-500 uppercase tracking-wide animate-pulse">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            Auditing
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-secondary/50 border border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
-            <AlertCircle className="w-3 h-3" />
-            Pending
-          </span>
-        );
-    }
-  };
+function StatusBadge({ status }: { status: string }) {
+  switch (status) {
+    case "COMPLETED":
+      return (
+        <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/20 text-emerald-500 uppercase text-[10px]">
+          <CheckCircle2 />
+          Success
+        </Badge>
+      );
+    case "FAILED":
+      return (
+        <Badge variant="destructive" className="uppercase text-[10px]">
+          <XCircle />
+          Failed
+        </Badge>
+      );
+    case "RUNNING":
+      return (
+        <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/20 text-cyan-500 uppercase text-[10px] animate-pulse">
+          <Loader2 className="animate-spin" />
+          Auditing
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="secondary" className="uppercase text-[10px]">
+          <AlertCircle />
+          Pending
+        </Badge>
+      );
+  }
+}
 
-  const getScoreBadge = (score: number | null) => {
-    if (score === null) return <span className="text-xs text-muted-foreground">—</span>;
-    
-    let color = "text-destructive bg-destructive/10 border-destructive/20";
-    if (score >= 90) {
-      color = "text-emerald-500 bg-emerald-500/10 border-emerald-500/20";
-    } else if (score >= 50) {
-      color = "text-amber-500 bg-amber-500/10 border-amber-500/20";
-    }
+function ScoreBadge({ score }: { score: number | null }) {
+  if (score === null) return <span className="text-xs text-muted-foreground">—</span>;
 
-    return (
-      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg border font-bold text-xs ${color}`}>
-        {score}
-      </span>
-    );
-  };
+  let className = "text-destructive bg-destructive/10 border-destructive/20";
+  if (score >= 90) className = "text-emerald-500 bg-emerald-500/10 border-emerald-500/20";
+  else if (score >= 50) className = "text-amber-500 bg-amber-500/10 border-amber-500/20";
 
   return (
-    <div className="bg-card border border-border/30 rounded-3xl p-6 space-y-5 flex flex-col h-[380px] select-none">
-      <div className="flex justify-between items-center">
-        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+    <Badge variant="outline" className={`tabular-nums font-bold ${className}`}>
+      {score}
+    </Badge>
+  );
+}
+
+export function RecentScans({ scans }: RecentScansProps) {
+  return (
+    <Card className="rounded-3xl border-border/30 flex flex-col h-[380px]">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle className="text-sm font-bold flex items-center gap-2">
           <Activity className="w-4 h-4 text-primary" />
           Recent Scans
-        </h3>
-        
+        </CardTitle>
         {scans.length > 0 && (
-          <Link
-            href="/dashboard/websites"
-            className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors group"
+          <Button
+            variant="link"
+            size="sm"
+            className="h-auto p-0 text-xs font-semibold"
+            render={<Link href="/dashboard/websites" />}
+            nativeButton={false}
           >
             All sites
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+            <ArrowRight />
+          </Button>
         )}
-      </div>
+      </CardHeader>
 
-      <div className="flex-1 overflow-y-auto pr-1">
+      <CardContent className="flex-1 overflow-y-auto pr-1">
         {scans.length > 0 ? (
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border/30 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  <th className="pb-3 pr-4">Website</th>
-                  <th className="pb-3 px-4">Status</th>
-                  <th className="pb-3 px-4 text-center">Score</th>
-                  <th className="pb-3 pl-4 text-right">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20 text-xs">
-                {scans.map((scan) => (
-                  <tr key={scan.id} className="hover:bg-secondary/15 transition-colors">
-                    <td className="py-3.5 pr-4 truncate max-w-[120px]">
-                      <span className="block font-semibold text-foreground truncate">{scan.website.name}</span>
-                      <span className="block text-[10px] text-muted-foreground truncate">{scan.website.url.replace(/^https?:\/\//, "")}</span>
-                    </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap">{getStatusBadge(scan.status)}</td>
-                    <td className="py-3.5 px-4 text-center">{getScoreBadge(scan.overallScore)}</td>
-                    <td className="py-3.5 pl-4 text-right text-muted-foreground whitespace-nowrap">
-                      {new Date(scan.createdAt).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-[10px] uppercase">Website</TableHead>
+                <TableHead className="text-[10px] uppercase">Status</TableHead>
+                <TableHead className="text-[10px] uppercase text-center">Score</TableHead>
+                <TableHead className="text-[10px] uppercase text-right">Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {scans.map((scan) => (
+                <TableRow key={scan.id}>
+                  <TableCell className="max-w-[120px]">
+                    <span className="block font-semibold text-foreground truncate">{scan.website.name}</span>
+                    <span className="block text-[10px] text-muted-foreground truncate">
+                      {scan.website.url.replace(/^https?:\/\//, "")}
+                    </span>
+                  </TableCell>
+                  <TableCell><StatusBadge status={scan.status} /></TableCell>
+                  <TableCell className="text-center"><ScoreBadge score={scan.overallScore} /></TableCell>
+                  <TableCell className="text-right text-muted-foreground whitespace-nowrap">
+                    {formatDateTime(scan.createdAt)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
           <div className="flex flex-col items-center justify-center text-center h-full text-muted-foreground space-y-2 py-10">
             <Activity className="w-8 h-8 text-muted-foreground/40 animate-pulse" />
             <p className="text-xs">No scan reports recorded yet.</p>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

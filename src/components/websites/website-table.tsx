@@ -3,10 +3,21 @@
 import React, { useTransition, useState } from "react";
 import Link from "next/link";
 import {
-  Globe, ArrowRight, Edit, Trash2, AlertCircle,
-  CheckCircle, Clock, XCircle, ChevronUp, ChevronDown, Zap,
+  Globe,
+  ArrowRight,
+  Edit,
+  Trash2,
+  CheckCircle,
+  Clock,
+  XCircle,
+  ChevronUp,
+  ChevronDown,
+  Zap,
 } from "lucide-react";
 import { deleteWebsiteAction } from "@/actions/websites";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface Scan {
   id: string;
@@ -35,57 +46,52 @@ interface WebsiteTableProps {
 type SortKey = "name" | "overallScore" | "frequency" | "lastScan";
 type SortDir = "asc" | "desc";
 
-function ScoreBadge({ score }: { score: number | null }) {
-  if (score === null)
-    return (
-      <span className="text-[11px] font-bold text-muted-foreground/60">—</span>
-    );
+function ScoreText({ score }: { score: number | null }) {
+  if (score === null) return <span className="text-[11px] font-bold text-muted-foreground/60">—</span>;
   const color =
-    score >= 90
-      ? "text-emerald-400"
-      : score >= 50
-      ? "text-amber-400"
-      : "text-rose-400";
+    score >= 90 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-rose-400";
   return <span className={`text-sm font-bold tabular-nums ${color}`}>{score}</span>;
 }
 
 function StatusBadge({ status }: { status?: string }) {
-  if (!status)
+  if (!status) {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
-        <Clock className="w-2.5 h-2.5" /> No Scan
-      </span>
+      <Badge variant="secondary" className="uppercase text-[10px]">
+        <Clock />
+        No scan
+      </Badge>
     );
+  }
+
   const map: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
     COMPLETED: {
       label: "Completed",
       className: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-      icon: <CheckCircle className="w-2.5 h-2.5" />,
+      icon: <CheckCircle />,
     },
     RUNNING: {
       label: "Running",
       className: "bg-blue-500/10 border-blue-500/20 text-blue-400",
-      icon: <Zap className="w-2.5 h-2.5 animate-pulse" />,
+      icon: <Zap className="animate-pulse" />,
     },
     PENDING: {
       label: "Pending",
       className: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-      icon: <Clock className="w-2.5 h-2.5" />,
+      icon: <Clock />,
     },
     FAILED: {
       label: "Failed",
       className: "bg-rose-500/10 border-rose-500/20 text-rose-400",
-      icon: <XCircle className="w-2.5 h-2.5" />,
+      icon: <XCircle />,
     },
   };
-  const config = map[status] ?? map["PENDING"];
+
+  const config = map[status] ?? map.PENDING;
   return (
-    <span
-      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${config.className}`}
-    >
+    <Badge variant="outline" className={`uppercase text-[10px] ${config.className}`}>
       {config.icon}
       {config.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -104,30 +110,28 @@ function SortButton({
 }) {
   const active = current === sortKey;
   return (
-    <button
-      onClick={() => onClick(sortKey)}
-      className={`flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
-        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+    <Button
+      variant="ghost"
+      size="sm"
+      className={`h-auto p-0 text-[11px] font-semibold uppercase tracking-wider ${
+        active ? "text-primary" : "text-muted-foreground"
       }`}
+      onClick={() => onClick(sortKey)}
     >
       {label}
       {active ? (
-        dir === "asc" ? (
-          <ChevronUp className="w-3 h-3" />
-        ) : (
-          <ChevronDown className="w-3 h-3" />
-        )
+        dir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
       ) : (
         <ChevronDown className="w-3 h-3 opacity-30" />
       )}
-    </button>
+    </Button>
   );
 }
 
 export function WebsiteTable({ websites, onScanTrigger }: WebsiteTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [pendingId, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -141,7 +145,8 @@ export function WebsiteTable({ websites, onScanTrigger }: WebsiteTableProps) {
   const sorted = [...websites].sort((a, b) => {
     const latestA = a.scans[0];
     const latestB = b.scans[0];
-    let valA: any, valB: any;
+    let valA: string | number;
+    let valB: string | number;
 
     if (sortKey === "name") {
       valA = a.name.toLowerCase();
@@ -171,8 +176,7 @@ export function WebsiteTable({ websites, onScanTrigger }: WebsiteTableProps) {
   };
 
   return (
-    <div className="bg-card border border-border/30 rounded-2xl overflow-hidden">
-      {/* Table Header */}
+    <Card className="rounded-2xl border-border/30 overflow-hidden py-0 gap-0">
       <div className="grid grid-cols-[2fr_1fr_repeat(4,_minmax(0,_1fr))_1.5fr_auto] items-center gap-4 px-5 py-3 border-b border-border/20 bg-secondary/20">
         <SortButton label="Website" sortKey="name" current={sortKey} dir={sortDir} onClick={handleSort} />
         <SortButton label="Status" sortKey="lastScan" current={sortKey} dir={sortDir} onClick={handleSort} />
@@ -184,7 +188,6 @@ export function WebsiteTable({ websites, onScanTrigger }: WebsiteTableProps) {
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</span>
       </div>
 
-      {/* Table Body */}
       <div className="divide-y divide-border/20">
         {sorted.map((site) => {
           const latestScan = site.scans[0];
@@ -193,7 +196,6 @@ export function WebsiteTable({ websites, onScanTrigger }: WebsiteTableProps) {
               key={site.id}
               className="grid grid-cols-[2fr_1fr_repeat(4,_minmax(0,_1fr))_1.5fr_auto] items-center gap-4 px-5 py-4 hover:bg-secondary/10 transition-colors group"
             >
-              {/* Name + URL */}
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{site.name}</p>
                 <a
@@ -207,58 +209,60 @@ export function WebsiteTable({ websites, onScanTrigger }: WebsiteTableProps) {
                 </a>
               </div>
 
-              {/* Status */}
               <StatusBadge status={latestScan?.status} />
+              <ScoreText score={latestScan?.overallScore ?? null} />
+              <ScoreText score={latestScan?.performanceScore ?? null} />
+              <ScoreText score={latestScan?.accessibilityScore ?? null} />
+              <ScoreText score={latestScan?.seoScore ?? null} />
 
-              {/* Scores */}
-              <ScoreBadge score={latestScan?.overallScore ?? null} />
-              <ScoreBadge score={latestScan?.performanceScore ?? null} />
-              <ScoreBadge score={latestScan?.accessibilityScore ?? null} />
-              <ScoreBadge score={latestScan?.seoScore ?? null} />
-
-              {/* Frequency */}
-              <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary/40 border border-border/20 text-muted-foreground w-fit">
+              <Badge variant="secondary" className="w-fit uppercase text-[11px]">
                 {site.scanFrequency.toLowerCase()}
-              </span>
+              </Badge>
 
-              {/* Actions */}
               <div className="flex items-center gap-1 justify-end">
                 {onScanTrigger && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => onScanTrigger(site.id)}
                     disabled={latestScan?.status === "RUNNING"}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/20 transition-all disabled:opacity-40 cursor-pointer"
-                    title="Audit Now"
+                    title="Audit now"
                   >
-                    <Zap className="w-3.5 h-3.5" />
-                  </button>
+                    <Zap />
+                  </Button>
                 )}
-                <Link
-                  href={`/dashboard/websites/${site.id}/settings`}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent hover:border-border/30 transition-all"
-                  title="Edit Settings"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  render={<Link href={`/dashboard/websites/${site.id}/settings`} />}
+                  nativeButton={false}
+                  title="Edit settings"
                 >
-                  <Edit className="w-3.5 h-3.5" />
-                </Link>
-                <button
+                  <Edit />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => handleDelete(site)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/25 transition-all cursor-pointer"
-                  title="Delete Website"
+                  className="hover:text-destructive hover:bg-destructive/10"
+                  title="Delete website"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-                <Link
-                  href={`/dashboard/websites/${site.id}`}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/20 transition-all"
-                  title="View Overview"
+                  <Trash2 />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  render={<Link href={`/dashboard/websites/${site.id}`} />}
+                  nativeButton={false}
+                  title="View overview"
                 >
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                  <ArrowRight />
+                </Button>
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }

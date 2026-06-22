@@ -7,6 +7,16 @@ import { WebsiteForm } from "./website-form";
 import { deleteWebsiteAction } from "@/actions/websites";
 import { useRouter } from "next/navigation";
 import { ScanFrequency } from "@prisma/client";
+import { formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface WebsiteSettingsClientProps {
   website: {
@@ -40,30 +50,31 @@ export function WebsiteSettingsClient({ website }: WebsiteSettingsClientProps) {
   };
 
   return (
-    <div className="space-y-8 select-none max-w-2xl">
-      {/* Breadcrumb */}
+    <div className="space-y-8 max-w-2xl">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Link href="/dashboard/websites" className="hover:text-foreground transition-colors">
+        <Button variant="link" size="sm" className="h-auto p-0" render={<Link href="/dashboard/websites" />} nativeButton={false}>
           Websites
-        </Link>
+        </Button>
         <span>/</span>
-        <Link
-          href={`/dashboard/websites/${website.id}`}
-          className="hover:text-foreground transition-colors"
+        <Button
+          variant="link"
+          size="sm"
+          className="h-auto p-0"
+          render={<Link href={`/dashboard/websites/${website.id}`} />}
+          nativeButton={false}
         >
           {website.name}
-        </Link>
+        </Button>
         <span>/</span>
         <span className="text-foreground">Settings</span>
       </div>
 
-      {/* Header */}
       <div className="flex items-center gap-3 border-b border-border/20 pb-6">
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/40 border border-border/30">
           <Settings className="w-5 h-5 text-muted-foreground" />
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Website Settings</h1>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-bold text-foreground">Website settings</h1>
           <a
             href={website.url}
             target="_blank"
@@ -74,16 +85,12 @@ export function WebsiteSettingsClient({ website }: WebsiteSettingsClientProps) {
             {website.url.replace(/^https?:\/\//, "")}
           </a>
         </div>
-        <Link
-          href={`/dashboard/websites/${website.id}`}
-          className="ml-auto flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl bg-secondary/40 border border-border/30"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
+        <ButtonLink href={`/dashboard/websites/${website.id}`} variant="outline" size="sm">
+          <ArrowLeft />
           Overview
-        </Link>
+        </ButtonLink>
       </div>
 
-      {/* Edit form */}
       <WebsiteForm
         websiteId={website.id}
         defaultValues={{
@@ -94,32 +101,28 @@ export function WebsiteSettingsClient({ website }: WebsiteSettingsClientProps) {
         onSuccess={() => router.push(`/dashboard/websites/${website.id}`)}
       />
 
-      {/* Danger zone */}
-      <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-6 space-y-4">
-        <h3 className="text-sm font-bold text-rose-400">Danger Zone</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Permanently delete this website and all of its scan history, issues, and reports. This
-          action cannot be undone.
-        </p>
-        <button
-          onClick={handleDelete}
-          disabled={isPending || deleted}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm font-semibold hover:bg-rose-500/20 transition-all disabled:opacity-50 cursor-pointer"
-        >
-          {isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Trash2 className="w-4 h-4" />
-          )}
-          {isPending ? "Deleting…" : "Delete Website"}
-        </button>
-      </div>
+      <Card className="border-rose-500/20 bg-rose-500/5">
+        <CardHeader>
+          <CardTitle className="text-sm text-rose-400">Danger zone</CardTitle>
+          <CardDescription>
+            Permanently delete this website and all of its scan history, issues, and reports. This
+            action cannot be undone.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isPending || deleted}
+          >
+            {isPending ? <Loader2 className="animate-spin" /> : <Trash2 />}
+            {isPending ? "Deleting…" : "Delete website"}
+          </Button>
+        </CardContent>
+      </Card>
 
-      {/* Meta */}
       <p className="text-[11px] text-muted-foreground">
-        Connected on {new Date(website.createdAt).toLocaleDateString("en-US", {
-          year: "numeric", month: "long", day: "numeric",
-        })}
+        Connected on {formatDate(website.createdAt)}
       </p>
     </div>
   );

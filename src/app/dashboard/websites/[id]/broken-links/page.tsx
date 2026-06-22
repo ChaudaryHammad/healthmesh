@@ -2,8 +2,8 @@ import React from "react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { AuditPageClient } from "@/components/websites/audit-page-client";
-import { Link2 } from "lucide-react";
+import { BrokenLinksClient } from "@/components/websites/broken-links-client";
+import { ALL_LINK_RESOURCE_TYPES } from "@/lib/scanner/link-resource-types";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -26,39 +26,37 @@ export default async function BrokenLinksPage({ params }: Props) {
   });
   if (!website) notFound();
 
-  const latestScan = await prisma.scan.findFirst({
-    where: { websiteId: id, status: "COMPLETED" },
+  const runningScan = await prisma.brokenLinkScan.findFirst({
+    where: { websiteId: id, status: "RUNNING" },
     orderBy: { createdAt: "desc" },
-    include: {
-      issues: {
-        where: { category: "BROKEN_LINKS" },
-        orderBy: [{ severity: "asc" }, { createdAt: "desc" }],
-      },
-    },
   });
 
+  const serializedScan = runningScan
+    ? {
+        id: runningScan.id,
+        status: runningScan.status,
+        mode: runningScan.mode,
+        resourceTypes: [...ALL_LINK_RESOURCE_TYPES],
+        phase: runningScan.phase,
+        statusMessage: runningScan.statusMessage,
+        pagesDiscovered: runningScan.pagesDiscovered,
+        pagesCrawled: runningScan.pagesCrawled,
+        linksFound: runningScan.linksFound,
+        linksChecked: runningScan.linksChecked,
+        brokenCount: runningScan.brokenCount,
+        progressPercent: runningScan.progressPercent,
+        errorMessage: runningScan.errorMessage,
+        completedAt: runningScan.completedAt?.toISOString() ?? null,
+        createdAt: runningScan.createdAt.toISOString(),
+      }
+    : null;
+
   return (
-    <AuditPageClient
+    <BrokenLinksClient
       websiteId={website.id}
       websiteName={website.name}
       websiteUrl={website.url}
-      category="BROKEN_LINKS"
-      categoryLabel="Broken Links"
-      score={null}
-      icon={<Link2 className="w-4 h-4" />}
-      accentClass="text-blue-400 bg-blue-500/10 border-blue-500/20"
-      issues={
-        latestScan?.issues.map((i) => ({
-          id: i.id,
-          severity: i.severity as any,
-          title: i.title,
-          description: i.description,
-          selector: i.selector,
-          url: i.url,
-          recommendation: i.recommendation,
-        })) ?? []
-      }
-      lastScanned={latestScan?.completedAt?.toISOString() ?? null}
+      initialScan={serializedScan}
     />
   );
 }

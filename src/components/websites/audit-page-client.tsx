@@ -6,6 +6,7 @@ import {
   ArrowLeft, AlertTriangle, Info, AlertOctagon,
   ChevronDown, ChevronUp, Globe, Filter,
 } from "lucide-react";
+import { formatDateTime } from "@/lib/utils";
 
 export type AuditCategory =
   | "PERFORMANCE"
@@ -263,7 +264,7 @@ export function AuditPageClient({
 
       {lastScanned && (
         <p className="text-xs text-muted-foreground text-center">
-          Last scanned: {new Date(lastScanned).toLocaleString()}
+          Last scanned: {formatDateTime(lastScanned)}
         </p>
       )}
     </div>

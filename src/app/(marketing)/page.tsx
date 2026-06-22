@@ -1,17 +1,32 @@
 import React from "react";
-import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { 
-  Zap, 
-  Eye, 
-  Search, 
-  ShieldAlert, 
-  Link2, 
-  CheckCircle2, 
-  ArrowRight, 
-  Gauge, 
-  Star 
+import {
+  Zap,
+  Eye,
+  Search,
+  Shield,
+  Link2,
+  BarChart3,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Layers,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button-link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+export const metadata = {
+  title: "LoopNode — Website health monitoring & audits",
+  description:
+    "Monitor performance, accessibility, SEO, and security. Crawl broken links, track scores over time, and fix issues before your users notice.",
+};
 
 export default async function LandingPage() {
   const session = await auth();
@@ -19,127 +34,139 @@ export default async function LandingPage() {
 
   const features = [
     {
-      title: "Performance Audits",
-      description: "Measure Core Web Vitals including FCP, LCP, CLS, and TBT. Get actionable warnings and recommendations to optimize speed.",
+      title: "Performance audits",
+      description:
+        "Real Lighthouse runs measure LCP, INP, CLS, FCP, and TBT. See Core Web Vitals with Good / Needs work / Poor ratings and drill into every finding.",
       icon: Zap,
-      color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+      color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     },
     {
-      title: "Accessibility Checks",
-      description: "Detect axe-core violations like contrast issues, missing labels, and missing alt text. Fix critical navigability bugs.",
+      title: "Accessibility scans",
+      description:
+        "axe-core checks WCAG 2.1 rules in a real browser — contrast, labels, keyboard traps, and ARIA issues with selectors you can act on.",
       icon: Eye,
-      color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+      color: "text-violet-400 bg-violet-500/10 border-violet-500/20",
     },
     {
-      title: "SEO Audits",
-      description: "Scan title tags, meta descriptions, sitemaps, robots.txt, and H1 tags to ensure search engines index your pages correctly.",
+      title: "SEO health checks",
+      description:
+        "Live analysis of titles, meta descriptions, H1 structure, Open Graph tags, robots.txt, sitemap.xml, and image alt text.",
       icon: Search,
-      color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+      color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
     },
     {
-      title: "Security Scans",
-      description: "Verify SSL certificates and check critical HTTP headers like CSP, HSTS, X-Frame-Options, and X-Content-Type-Options.",
-      icon: ShieldAlert,
-      color: "text-rose-500 bg-rose-500/10 border-rose-500/20",
+      title: "Security & CSP grading",
+      description:
+        "Inspect HTTPS, HSTS, CSP, X-Frame-Options, and more. Get a letter grade on your Content-Security-Policy with tiered fix recommendations.",
+      icon: Shield,
+      color: "text-rose-400 bg-rose-500/10 border-rose-500/20",
     },
     {
-      title: "Broken Link Crawler",
-      description: "Scan your site's anchor tags and images to identify 404 dead links, redirect chains, and broken assets immediately.",
+      title: "Broken link checker",
+      description:
+        "Dedicated crawler for internal and external links — find 404s, dead assets, and broken anchors with source page and element context.",
       icon: Link2,
-      color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+      color: "text-blue-400 bg-blue-500/10 border-blue-500/20",
     },
     {
-      title: "Actionable Issue Center",
-      description: "Manage, filter, and search all audit issues in a centralized command center. Group bugs by severity levels.",
-      icon: Gauge,
-      color: "text-cyan-500 bg-cyan-500/10 border-cyan-500/20",
+      title: "Score trends & history",
+      description:
+        "Track health scores across audits, compare categories over time, and know exactly when a deploy introduced regressions.",
+      icon: BarChart3,
+      color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
     },
   ];
 
   const steps = [
     {
       step: "01",
-      title: "Connect Website",
-      description: "Enter your domain URL and configure your preferred scan frequencies (manual or scheduled).",
+      title: "Connect your site",
+      description:
+        "Add any public URL. LoopNode validates the connection and keeps your portfolio organized in one dashboard.",
     },
     {
       step: "02",
-      title: "Automated Auditing",
-      description: "Our background workers spin up Puppeteer, Lighthouse, and crawler engines to perform a multi-point scan.",
+      title: "Run a full audit",
+      description:
+        "One click triggers Lighthouse, axe-core, SEO parsing, and security header checks — real engines, not simulated scores.",
     },
     {
       step: "03",
-      title: "Get Actionable Reports",
-      description: "Review detailed scores, historical performance trends, PDF reports, and step-by-step instructions to fix issues.",
+      title: "Fix with confidence",
+      description:
+        "Every issue includes severity, description, and recommendations. Category pages go deep — CSP grades, WCAG rules, vitals breakdowns.",
     },
   ];
 
-  const testimonials = [
+  const pillars = [
     {
-      quote: "This scanner saved us hours of debugging. We optimized our LCP and fixed accessibility bugs in days.",
-      author: "Sarah Connor",
-      role: "Lead Engineer, TechCorp",
+      icon: Layers,
+      title: "Real scanning engines",
+      text: "Lighthouse, axe-core, and live HTTP analysis — the same tools experts use, automated for your workflow.",
     },
     {
-      quote: "The HTTP header checking and sitemap validator are brilliant. It makes auditing production sites incredibly simple.",
-      author: "Alex Mercer",
-      role: "Founder, WebFlow Studio",
+      icon: Clock,
+      title: "Continuous monitoring",
+      text: "Schedule scans on Pro plans and catch regressions before they reach production traffic.",
     },
     {
-      quote: "Beautiful interface, fast reports, and a centralized issue manager. Essential tool for modern SaaS developers.",
-      author: "Elena Rostova",
-      role: "VP of Product, ApexInc",
+      icon: CheckCircle2,
+      title: "Actionable reports",
+      text: "No vanity metrics. Every score ties to specific issues with clear next steps to resolve them.",
     },
   ];
 
   return (
-    <div className="flex-1 flex flex-col items-center overflow-hidden select-none">
-      
-      {/* Hero Section */}
-      <section className="relative w-full max-w-7xl mx-auto px-6 pt-20 pb-24 md:pt-32 md:pb-36 flex flex-col items-center text-center">
-        {/* Glow Spheres */}
+    <div className="flex-1 flex flex-col items-center overflow-hidden">
+      <section className="relative w-full max-w-[88rem] mx-auto px-6 pt-20 pb-24 md:pt-32 md:pb-36 flex flex-col items-center text-center">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[140px] pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider animate-pulse">
+          <Badge variant="outline" className="bg-primary/10 border-primary/20 text-primary px-3 py-1.5 text-xs font-semibold tracking-wide">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Now Powered By Lighthouse & axe-core
-          </div>
+            Built on Lighthouse &amp; axe-core
+          </Badge>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-none bg-gradient-to-b from-foreground via-foreground to-foreground/75 bg-clip-text text-transparent">
-            Monitor & Optimize Your Website's Health
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1] bg-gradient-to-b from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+            Know your website&apos;s health before your users do
           </h1>
-          
+
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Run automated performance, accessibility, SEO, and security audits. Get deep Core Web Vital scores and broken link scans instantly.
+            LoopNode audits performance, accessibility, SEO, and security — then crawls for broken links.
+            One dashboard. Real scores. Clear fixes.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link
+            <ButtonLink
               href={isLoggedIn ? "/dashboard" : "/register"}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/20 hover:bg-primary/95 transition-all active:scale-[0.99] cursor-pointer"
+              size="lg"
+              className="w-full sm:w-auto shadow-lg shadow-primary/20"
             >
-              {isLoggedIn ? "Go to Dashboard" : "Start Auditing Free"}
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/features"
-              className="w-full sm:w-auto flex items-center justify-center px-6 py-3 rounded-xl bg-secondary/40 border border-border/40 text-sm font-semibold text-foreground hover:bg-secondary/60 hover:border-border/80 transition-all active:scale-[0.99] cursor-pointer"
+              {isLoggedIn ? "Go to dashboard" : "Start free trial"}
+              <ArrowRight />
+            </ButtonLink>
+            <ButtonLink
+              href="/pricing"
+              variant="secondary"
+              size="lg"
+              className="w-full sm:w-auto"
             >
-              Explore Features
-            </Link>
+              View pricing
+            </ButtonLink>
           </div>
+          <p className="text-xs text-muted-foreground">
+            14-day free trial · No credit card required · Plans from $19/mo
+          </p>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="w-full max-w-7xl mx-auto px-6 py-20 border-t border-border/20">
+      <section className="w-full max-w-[88rem] mx-auto px-6 py-20 border-t border-border/20">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
-            Complete Auditing Toolkit
+            Everything you need to ship healthy sites
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Our multi-threaded engine inspects every aspect of your website to identify critical performance bottlenecks, structural issues, and security vulnerabilities.
+            Five audit dimensions plus a dedicated link checker — each with its own deep-dive report page.
           </p>
         </div>
 
@@ -147,103 +174,109 @@ export default async function LandingPage() {
           {features.map((feature, idx) => {
             const Icon = feature.icon;
             return (
-              <div 
-                key={idx} 
-                className="bg-card border border-border/30 rounded-2xl p-6 space-y-4 hover:border-border/80 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group"
+              <Card
+                key={idx}
+                className="hover:shadow-lg transition-all duration-300 border-border/30"
               >
-                <div className={`flex items-center justify-center w-10 h-10 rounded-xl border ${feature.color} shrink-0`}>
-                  <Icon className="w-5 h-5 group-hover:scale-105 transition-transform" />
-                </div>
-                <h3 className="text-lg font-bold text-foreground">{feature.title}</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-              </div>
+                <CardContent className="space-y-4">
+                  <div
+                    className={`flex items-center justify-center w-10 h-10 rounded-xl border ${feature.color}`}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <CardTitle className="text-lg font-bold">{feature.title}</CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    {feature.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
+
+        <div className="text-center mt-10">
+          <ButtonLink href="/features" variant="link" className="text-sm font-semibold">
+            Explore all capabilities
+            <ArrowRight />
+          </ButtonLink>
+        </div>
       </section>
 
-      {/* How It Works Section */}
       <section className="w-full bg-secondary/15 border-t border-b border-border/20">
-        <div className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="max-w-[88rem] mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:pr-8 flex flex-col justify-center space-y-4">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              How website health monitoring works
+              How LoopNode works
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              We leverage cloud-hosted browser instances to test your pages under simulated network conditions, delivering precise insights.
+              Connect a URL, run an audit, and get categorized findings in under a minute. No agents to install, no code changes required.
             </p>
           </div>
 
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-8">
             {steps.map((item, idx) => (
-              <div key={idx} className="relative space-y-3">
-                <span className="block text-4xl font-extrabold text-primary/20 font-mono leading-none">
+              <div key={idx} className="space-y-3">
+                <span className="block text-4xl font-extrabold text-primary/25 font-mono leading-none">
                   {item.step}
                 </span>
                 <h3 className="text-base font-bold text-foreground">{item.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.description}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="w-full max-w-7xl mx-auto px-6 py-20">
+      <section className="w-full max-w-[88rem] mx-auto px-6 py-20">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
-            Trusted by product engineers
+            Why teams choose LoopNode
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            See how developers utilize our diagnostic tools to maintain top SEO rank and core compliance.
+            Purpose-built for developers, agencies, and product teams who ship often and cannot afford silent regressions.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((t, idx) => (
-            <div key={idx} className="bg-card border border-border/30 rounded-2xl p-6 flex flex-col justify-between space-y-6">
-              <p className="text-sm italic text-muted-foreground leading-relaxed">
-                &ldquo;{t.quote}&rdquo;
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-foreground">{t.author}</h4>
-                  <p className="text-xs text-muted-foreground/80">{t.role}</p>
-                </div>
-                <div className="flex gap-0.5 text-amber-500">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
+          {pillars.map((p, idx) => {
+            const Icon = p.icon;
+            return (
+              <Card key={idx} className="border-border/30">
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 text-primary">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <CardTitle className="text-base font-bold">{p.title}</CardTitle>
+                  <CardDescription className="leading-relaxed">{p.text}</CardDescription>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </section>
 
-      {/* CTA Banner Section */}
-      <section className="w-full max-w-7xl mx-auto px-6 pb-20">
-        <div className="relative w-full rounded-3xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 px-8 py-12 md:py-16 text-center overflow-hidden flex flex-col items-center space-y-6">
+      <section className="w-full max-w-[88rem] mx-auto px-6 pb-20">
+        <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-3xl">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
-          
-          <h2 className="text-3xl font-bold tracking-tight text-foreground max-w-xl relative z-10 leading-none">
-            Ready to secure and speed up your website?
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-md relative z-10 leading-relaxed">
-            Create a free account and run your first complete performance audit in under 60 seconds.
-          </p>
-          <div className="relative z-10 pt-2">
-            <Link
-              href={isLoggedIn ? "/dashboard" : "/register"}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/20 hover:bg-primary/95 transition-all active:scale-[0.99] cursor-pointer"
-            >
-              {isLoggedIn ? "Dashboard Panel" : "Register Free"}
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
+          <CardHeader className="text-center relative z-10">
+            <CardTitle className="text-3xl font-bold max-w-xl mx-auto">
+              Start monitoring your sites today
+            </CardTitle>
+            <CardDescription className="max-w-md mx-auto leading-relaxed">
+              Try LoopNode free for 14 days. Run your first audit in under 60 seconds and see exactly where your site stands.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-3 pb-8">
+            <ButtonLink href={isLoggedIn ? "/dashboard" : "/register"} size="lg" className="shadow-lg shadow-primary/20">
+              {isLoggedIn ? "Open dashboard" : "Start free trial"}
+              <ArrowRight />
+            </ButtonLink>
+            <ButtonLink href="/contact" variant="outline" size="lg">
+              Talk to us
+            </ButtonLink>
+          </CardContent>
+        </Card>
       </section>
-
     </div>
   );
 }

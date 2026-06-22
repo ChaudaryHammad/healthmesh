@@ -7,6 +7,11 @@ import Link from "next/link";
 import { registerSchema } from "@/lib/validations/auth";
 import { registerAction } from "@/actions/auth";
 import { Activity, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +35,12 @@ export default function RegisterPage() {
     },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: {
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
     setError(null);
     setSuccess(null);
     startTransition(async () => {
@@ -46,7 +56,6 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full">
-      {/* Brand Logo & Heading */}
       <div className="flex flex-col items-center text-center mb-8">
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary mb-4 animate-pulse">
           <Activity className="w-6 h-6" />
@@ -55,155 +64,137 @@ export default function RegisterPage() {
           Create an Account
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Start auditing and improving your websites today
+          Start your 14-day free trial — no credit card required
         </p>
       </div>
 
       {success ? (
         <div className="text-center py-6 px-4 animate-in fade-in zoom-in duration-300">
-          <div className="flex justify-center mb-4 text-green-500">
-            <CheckCircle2 className="w-12 h-12" />
-          </div>
-          <h3 className="text-lg font-bold text-foreground mb-2">Check Your Email</h3>
-          <p className="text-sm text-muted-foreground mb-6">
-            {success}
-          </p>
-          <Link
-            href="/login"
-            className="inline-block px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/95 transition-colors"
-          >
-            Go to Sign In
-          </Link>
+          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-foreground mb-2">Check your email</h3>
+          <p className="text-sm text-muted-foreground mb-6">{success}</p>
+          <ButtonLink href="/login">Go to sign in</ButtonLink>
         </div>
       ) : (
         <>
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in fade-in slide-in-from-top-1 duration-200">
-              {error}
-            </div>
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
-          {/* Registration Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Full Name
-              </label>
-              <input
-                type="text"
-                placeholder="John Doe"
+            <div className="space-y-2">
+              <Label htmlFor="name">Full name</Label>
+              <Input
+                id="name"
+                placeholder="Your name"
                 disabled={isPending}
-                className={`w-full px-4 py-2 rounded-xl bg-secondary/30 border ${
-                  errors.name ? "border-destructive" : "border-border/40"
-                } text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/80 focus:ring-2 focus:ring-primary/20 disabled:opacity-50`}
+                aria-invalid={!!errors.name}
                 {...register("name")}
               />
               {errors.name && (
-                <p className="text-xs text-destructive mt-1">{errors.name.message as string}</p>
+                <p className="text-xs text-destructive">{errors.name.message as string}</p>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Email Address
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
                 type="email"
-                placeholder="john@example.com"
+                placeholder="you@example.com"
                 disabled={isPending}
-                className={`w-full px-4 py-2 rounded-xl bg-secondary/30 border ${
-                  errors.email ? "border-destructive" : "border-border/40"
-                } text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/80 focus:ring-2 focus:ring-primary/20 disabled:opacity-50`}
+                aria-invalid={!!errors.email}
                 {...register("email")}
               />
               {errors.email && (
-                <p className="text-xs text-destructive mt-1">{errors.email.message as string}</p>
+                <p className="text-xs text-destructive">{errors.email.message as string}</p>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Password
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <input
+                <Input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   disabled={isPending}
-                  className={`w-full pl-4 pr-11 py-2 rounded-xl bg-secondary/30 border ${
-                    errors.password ? "border-destructive" : "border-border/40"
-                  } text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/80 focus:ring-2 focus:ring-primary/20 disabled:opacity-50`}
+                  aria-invalid={!!errors.password}
+                  className="pr-10"
                   {...register("password")}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   tabIndex={-1}
                   disabled={isPending}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors outline-none"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </Button>
               </div>
               {errors.password && (
-                <p className="text-xs text-destructive mt-1">{errors.password.message as string}</p>
+                <p className="text-xs text-destructive">{errors.password.message as string}</p>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Confirm Password
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm password</Label>
               <div className="relative">
-                <input
+                <Input
+                  id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
                   disabled={isPending}
-                  className={`w-full pl-4 pr-11 py-2 rounded-xl bg-secondary/30 border ${
-                    errors.confirmPassword ? "border-destructive" : "border-border/40"
-                  } text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/80 focus:ring-2 focus:ring-primary/20 disabled:opacity-50`}
+                  aria-invalid={!!errors.confirmPassword}
+                  className="pr-10"
                   {...register("confirmPassword")}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   tabIndex={-1}
                   disabled={isPending}
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors outline-none"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+                  {showConfirmPassword ? <EyeOff /> : <Eye />}
+                </Button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message as string}</p>
+                <p className="text-xs text-destructive">
+                  {errors.confirmPassword.message as string}
+                </p>
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full flex items-center justify-center px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/20 hover:bg-primary/95 active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-            >
+            <Button type="submit" disabled={isPending} className="w-full" size="lg">
               {isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="animate-spin" />
                   Creating account...
                 </>
               ) : (
-                "Create Account"
+                "Create account"
               )}
-            </button>
+            </Button>
           </form>
 
-          {/* Footer Link */}
           <p className="text-center text-sm text-muted-foreground mt-8">
             Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-primary hover:text-primary/80 transition-colors"
+            <Button
+              variant="link"
+              className="h-auto p-0 font-semibold"
+              render={<Link href="/login" />}
+              nativeButton={false}
             >
-              Sign In
-            </Link>
+              Sign in
+            </Button>
           </p>
         </>
       )}
