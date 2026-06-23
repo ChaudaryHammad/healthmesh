@@ -9,7 +9,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "node scripts/ensure-chrome.mjs"
+"postinstall": "echo 'Skipping Chrome install on build'"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
