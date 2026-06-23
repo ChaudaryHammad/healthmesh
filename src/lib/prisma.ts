@@ -7,18 +7,24 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function resolveDatabaseUrl(): string {
-  const url = process.env.DIRECT_URL?.trim() || process.env.DATABASE_URL?.trim();
+  // Runtime queries must go through the pooled (transaction mode) connection.
+  // DIRECT_URL is for migrations only — see prisma.config.ts.
+  const url = process.env.DATABASE_URL?.trim();
   if (!url) {
-    throw new Error("DATABASE_URL or DIRECT_URL must be set.");
+    throw new Error("DATABASE_URL must be set.");
   }
   return url;
 }
 
 function createPool(): Pool {
   const connectionString = resolveDatabaseUrl();
-  const config: PoolConfig = { connectionString };
+  const config: PoolConfig = {
+    connectionString,
+    max: 1, // Supavisor handles multiplexing across instances — don't duplicate pooling here
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+  };
 
-  // Supabase requires SSL; session/direct URLs work better than transaction pooler for Prisma.
   if (connectionString.includes("supabase.com")) {
     config.ssl = { rejectUnauthorized: false };
   }
