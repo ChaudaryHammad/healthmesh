@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../src/lib/scanner/fail-audit-scan.ts"],
+  "sourcesContent": ["import { prisma } from \"@/lib/prisma\";\r\n\r\nexport async function failAuditScan(scanId: string, errorMessage: string) {\r\n  await prisma.scan.updateMany({\r\n    where: { id: scanId, status: \"RUNNING\" },\r\n    data: {\r\n      status: \"FAILED\",\r\n      errorMessage,\r\n      completedAt: new Date(),\r\n    },\r\n  });\r\n}\r\n"],
+  "mappings": ";;;;;;;;;AAAA;AAEA,eAAsB,cAAc,QAAgB,cAAsB;AACxE,QAAM,OAAO,KAAK,WAAW;AAAA,IAC3B,OAAO,EAAE,IAAI,QAAQ,QAAQ,UAAU;AAAA,IACvC,MAAM;AAAA,MACJ,QAAQ;AAAA,MACR;AAAA,MACA,aAAa,oBAAI,KAAK;AAAA,IACxB;AAAA,EACF,CAAC;AACH;AATsB;",
+  "names": []
+}

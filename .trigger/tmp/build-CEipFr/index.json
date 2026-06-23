@@ -1,0 +1,34 @@
+{
+  "configPath": "D:\\tet\\loopnode\\.trigger\\tmp\\build-CEipFr\\trigger.config.mjs",
+  "customConditions": [
+  ],
+  "prompts": [
+  ],
+  "queues": [
+  ],
+  "runtime": "node",
+  "runtimeVersion": "24.14.1",
+  "tasks": [
+    {
+      "entryPoint": "D:\\tet\\loopnode\\.trigger\\tmp\\build-CEipFr\\src\\trigger\\run-audit.mjs",
+      "filePath": "src/trigger/run-audit.ts",
+      "id": "run-audit",
+      "maxDuration": 300,
+      "retry": {
+        "factor": 2,
+        "maxAttempts": 1,
+        "maxTimeoutInMs": 60000,
+        "minTimeoutInMs": 1000,
+        "randomize": true
+      }
+    }
+  ],
+  "timings": {
+    "src/lib/prisma.ts": 100.47490000000016,
+    "src/lib/scanner/audit-runner.ts": 2742.6555,
+    "src/lib/scanner/complete-audit-scan.ts": 1.8407999999999447,
+    "src/lib/scanner/fail-audit-scan.ts": 1.1628999999998086,
+    "src/trigger/run-audit.ts": 2.3101999999998952
+  },
+  "workerEntryPoint": "D:\\tet\\loopnode\\.trigger\\tmp\\build-CEipFr\\node_modules\\trigger.dev\\dist\\esm\\entryPoints\\dev-run-worker.mjs"
+}
