@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import WebsitesClient from "./WebsitesClient";
-import { triggerScanAction } from "@/actions/scans";
 
 export const metadata = {
   title: "Connected Websites",
@@ -46,15 +45,5 @@ export default async function WebsitesPage() {
     })),
   }));
 
-  const handleScanTrigger = async (websiteId: string) => {
-    "use server";
-    await triggerScanAction(websiteId);
-  };
-
-  return (
-    <WebsitesClient
-      initialWebsites={serialized}
-      onScanTrigger={handleScanTrigger}
-    />
-  );
+  return <WebsitesClient initialWebsites={serialized} />;
 }

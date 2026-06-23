@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { WebsiteOverviewClient } from "@/components/websites/website-overview-client";
-import { triggerScanAction } from "@/actions/scans";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -92,17 +91,11 @@ export default async function WebsiteOverviewPage({ params }: Props) {
       }
     : null;
 
-  const handleScan = async () => {
-    "use server";
-    await triggerScanAction(id);
-  };
-
   return (
     <WebsiteOverviewClient
       website={serializedWebsite}
       scans={serializedScans}
       latestBrokenLinkScan={serializedBrokenLinkScan}
-      onScanTrigger={handleScan}
     />
   );
 }

@@ -43,6 +43,12 @@ enum IssueCategory {
   BROKEN_LINKS
 }
 
+enum IssueStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
 enum BrokenLinkScanMode {
   INTERNAL
   EXTERNAL
@@ -53,6 +59,12 @@ enum BrokenLinkScanStatus {
   RUNNING
   COMPLETED
   FAILED
+}
+
+enum ReportType {
+  FULL_AUDIT
+  EXECUTIVE_SUMMARY
+  ISSUES_CSV
 }
 
 // ─── USER & AUTH ──────────────────────────────────
@@ -203,12 +215,16 @@ model Issue {
   scanId         String
   category       IssueCategory
   severity       IssueSeverity
+  status         IssueStatus   @default(OPEN)
+  fingerprint    String        @default("")
   title          String
   description    String        @db.Text
   selector       String?       // CSS selector (for accessibility issues)
   url            String?       // Affected URL (for broken links)
   recommendation String?       @db.Text
   metadata       Json?         // Flexible per-category data
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
   createdAt      DateTime      @default(now())
 
   scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
@@ -216,6 +232,8 @@ model Issue {
   @@index([scanId])
   @@index([category])
   @@index([severity])
+  @@index([status])
+  @@index([fingerprint])
   @@map("issues")
 }
 
@@ -272,17 +290,22 @@ model BrokenLinkResult {
 
 // ─── REPORTS ─────────────────────────────────────
 model Report {
-  id         String   @id @default(cuid())
-  websiteId  String
-  scanId     String?
-  title      String
-  fileUrl    String   // Cloudinary URL
-  fileSize   Int?
-  createdAt  DateTime @default(now())
+  id                 String     @id @default(cuid())
+  websiteId          String
+  scanId             String?
+  type               ReportType @default(FULL_AUDIT)
+  format             String     @default("pdf")
+  title              String
+  fileUrl            String
+  cloudinaryPublicId String?
+  fileSize           Int?
+  createdAt          DateTime   @default(now())
 
   website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 
   @@index([websiteId])
+  @@index([type])
+  @@index([createdAt])
   @@map("reports")
 }
 

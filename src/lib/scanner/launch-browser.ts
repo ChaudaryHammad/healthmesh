@@ -1,7 +1,18 @@
 import { existsSync } from "fs";
 import puppeteer, { type Browser, type LaunchOptions } from "puppeteer";
 
-const LAUNCH_ARGS = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"];
+const LAUNCH_ARGS = [
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-dev-shm-usage",
+  "--disable-gpu",
+  "--disable-extensions",
+  "--disable-background-networking",
+  "--disable-default-apps",
+  "--disable-sync",
+  "--no-first-run",
+  "--mute-audio",
+];
 
 function systemChromePaths(): string[] {
   const paths: string[] = [];

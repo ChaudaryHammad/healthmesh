@@ -15,11 +15,15 @@ import {
   Home,
   ExternalLink,
   Square,
+  Eye,
+  Download,
+  FileText,
 } from "lucide-react";
 import {
   startBrokenLinkScanAction,
   getBrokenLinkScanStatusAction,
   cancelBrokenLinkScanAction,
+  generateBrokenLinksPdfAction,
 } from "@/actions/broken-links";
 import { formatDateTime } from "@/lib/utils";
 import type { BrokenLinkScanMode } from "@prisma/client";
@@ -343,6 +347,15 @@ function serializeScan(scan: {
   };
 }
 
+function base64ToBlob(base64: string, mimeType: string) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mimeType });
+}
+
 export function BrokenLinksClient({
   websiteId,
   websiteName,
@@ -356,6 +369,9 @@ export function BrokenLinksClient({
   const [startingMode, setStartingMode] = useState<BrokenLinkScanMode | null>(null);
   const [isHalting, setIsHalting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfFilename, setPdfFilename] = useState<string | null>(null);
   const [pollingId, setPollingId] = useState<string | null>(
     initialScan?.status === "RUNNING" ? initialScan.id : null
   );
@@ -374,6 +390,12 @@ export function BrokenLinksClient({
     }
     return "FAILED";
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    };
+  }, [pdfBlobUrl]);
 
   useEffect(() => {
     if (!pollingId) return;
@@ -408,6 +430,9 @@ export function BrokenLinksClient({
     setIsStarting(true);
     setStartingMode(scanMode);
     setLiveResults([]);
+    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    setPdfBlobUrl(null);
+    setPdfFilename(null);
     setActiveScan(createOptimisticScan(scanMode, selectedTypes));
 
     try {
@@ -423,21 +448,27 @@ export function BrokenLinksClient({
 
       await pollScan(scanId);
 
-      const response = await fetch(`/api/broken-links/${scanId}/execute`, {
+      void fetch(`/api/broken-links/${scanId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resourceTypes: selectedTypes }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error ?? "Scan failed.");
-      } else if (Array.isArray(data.findings)) {
-        setLiveResults(findingsToResults(data.findings));
-      }
-
-      await pollScan(scanId);
-      setPollingId(null);
+      })
+        .then(async (response) => {
+          const data = await response.json();
+          if (!response.ok) {
+            setError(data.error ?? "Scan failed.");
+          } else if (Array.isArray(data.findings)) {
+            setLiveResults(findingsToResults(data.findings));
+          }
+          await pollScan(scanId);
+        })
+        .catch((err) => {
+          console.error(err);
+          setError("Lost connection to the link checker. Refresh and try again.");
+        })
+        .finally(() => {
+          setPollingId(null);
+        });
     } catch (err) {
       console.error(err);
       setError("Something went wrong starting the scan.");
@@ -471,11 +502,90 @@ export function BrokenLinksClient({
     }
   };
 
+  const ensurePdfReady = async () => {
+    if (pdfBlobUrl && pdfFilename) {
+      return { blobUrl: pdfBlobUrl, filename: pdfFilename };
+    }
+
+    if (!activeScan || (activeScan.status !== "COMPLETED" && activeScan.phase !== "cancelled")) {
+      throw new Error("Run a broken link check first.");
+    }
+
+    setIsGeneratingPdf(true);
+    setError(null);
+
+    try {
+      const res = await generateBrokenLinksPdfAction({
+        websiteId,
+        websiteName,
+        websiteUrl,
+        mode: activeScan.mode,
+        resourceTypes: activeScan.resourceTypes,
+        completedAt: activeScan.completedAt,
+        pagesCrawled: activeScan.pagesCrawled,
+        linksChecked: activeScan.linksChecked,
+        brokenCount: activeScan.brokenCount,
+        findings: liveResults.map((result) => ({
+          href: result.href,
+          sourcePageUrl: result.sourcePageUrl,
+          statusCode: result.statusCode,
+          errorMessage: result.errorMessage,
+          elementTag: result.elementTag,
+          elementId: result.elementId,
+          elementClass: result.elementClass,
+          elementText: result.elementText,
+          selector: result.selector,
+          attribute: result.attribute,
+          severity: result.severity,
+        })),
+      });
+
+      if (!res.success || !res.data) {
+        throw new Error(res.error ?? "Failed to generate PDF.");
+      }
+
+      const blob = base64ToBlob(res.data.fileBase64, "application/pdf");
+      const blobUrl = URL.createObjectURL(blob);
+      setPdfBlobUrl(blobUrl);
+      setPdfFilename(res.data.filename);
+      return { blobUrl, filename: res.data.filename };
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleViewPdf = async () => {
+    try {
+      const { blobUrl } = await ensurePdfReady();
+      window.open(blobUrl, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to open PDF.");
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      const { blobUrl, filename } = await ensurePdfReady();
+      const anchor = document.createElement("a");
+      anchor.href = blobUrl;
+      anchor.download = filename;
+      anchor.click();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to download PDF.");
+    }
+  };
+
   const results = liveResults;
   const showProgress = isScanning || activeScan?.status === "RUNNING";
 
   const isModeBusy = (scanMode: BrokenLinkScanMode) =>
     isScanning && (activeScan?.mode === scanMode || startingMode === scanMode);
+
+  const canExportPdf =
+    activeScan &&
+    activeScan.id !== "pending" &&
+    !showProgress &&
+    (activeScan.status === "COMPLETED" || activeScan.phase === "cancelled");
 
   return (
     <div className="space-y-6 select-none">
@@ -658,29 +768,60 @@ export function BrokenLinksClient({
         </Alert>
       )}
 
-      {activeScan?.status === "COMPLETED" && !showProgress && (
-        <div className="flex flex-wrap gap-2">
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
-            Types: {formatResourceTypes(activeScan.resourceTypes)}
-          </span>
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
-            Mode: {activeScan.mode.toLowerCase()}
-          </span>
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
-            {activeScan.pagesCrawled} pages crawled
-          </span>
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
-            {activeScan.linksChecked} links checked
-          </span>
-          <span
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
-              activeScan.brokenCount > 0
-                ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
-                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-            }`}
-          >
-            {activeScan.brokenCount} broken
-          </span>
+      {canExportPdf && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
+              Types: {formatResourceTypes(activeScan.resourceTypes)}
+            </span>
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
+              Mode: {activeScan.mode.toLowerCase()}
+            </span>
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
+              {activeScan.pagesCrawled} pages crawled
+            </span>
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary/40 border border-border/30 text-muted-foreground">
+              {activeScan.linksChecked} links checked
+            </span>
+            <span
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                activeScan.brokenCount > 0
+                  ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                  : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+              }`}
+            >
+              {activeScan.brokenCount} broken
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/30 bg-card p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <FileText className="size-4 text-primary" />
+              Export results
+            </div>
+            <p className="w-full text-xs text-muted-foreground sm:w-auto sm:flex-1">
+              One-time PDF — not saved to your library or Cloudinary.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleViewPdf}
+              disabled={isGeneratingPdf}
+            >
+              {isGeneratingPdf ? <Loader2 className="animate-spin" /> : <Eye />}
+              View PDF
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+            >
+              {isGeneratingPdf ? <Loader2 className="animate-spin" /> : <Download />}
+              Download PDF
+            </Button>
+          </div>
         </div>
       )}
 

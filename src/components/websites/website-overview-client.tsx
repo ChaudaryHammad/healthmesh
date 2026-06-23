@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useTransition } from "react";
+import React from "react";
 import Link from "next/link";
 import {
   Globe,
@@ -42,6 +42,7 @@ import {
   vitalRatingClasses,
   vitalRatingLabel,
 } from "@/lib/web-vitals";
+import { AuditScanControls } from "@/components/websites/audit-scan-controls";
 
 interface SerializedScan {
   id: string;
@@ -88,7 +89,6 @@ interface WebsiteOverviewClientProps {
   website: SerializedWebsite;
   scans: SerializedScan[];
   latestBrokenLinkScan: SerializedBrokenLinkScan | null;
-  onScanTrigger: () => void;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -318,14 +318,8 @@ export function WebsiteOverviewClient({
   website,
   scans,
   latestBrokenLinkScan,
-  onScanTrigger,
 }: WebsiteOverviewClientProps) {
-  const [isPending, startTransition] = useTransition();
   const latestScan = scans[0] ?? null;
-
-  const handleScan = () => {
-    startTransition(() => onScanTrigger());
-  };
 
   const coreVitals = VITAL_DEFINITIONS.filter((v) => v.isCoreWebVital);
   const labMetrics = VITAL_DEFINITIONS.filter((v) => !v.isCoreWebVital);
@@ -376,16 +370,17 @@ export function WebsiteOverviewClient({
             )}
           </div>
 
-          <Button
-            id="trigger-scan-btn"
-            onClick={handleScan}
-            disabled={isPending || latestScan?.status === "RUNNING"}
+          <AuditScanControls
+            websiteId={website.id}
+            runningScanId={
+              latestScan?.status === "RUNNING" ? latestScan.id : null
+            }
+            label="Run audit"
+            runningLabel="Scanning…"
+            runVariant="default"
             size="lg"
-            className="shrink-0 shadow-lg shadow-primary/20"
-          >
-            <RefreshCw className={isPending ? "animate-spin" : ""} />
-            {isPending || latestScan?.status === "RUNNING" ? "Scanning…" : "Run audit"}
-          </Button>
+            className="shrink-0"
+          />
         </div>
       </div>
 

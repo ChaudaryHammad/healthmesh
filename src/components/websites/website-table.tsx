@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { deleteWebsiteAction } from "@/actions/websites";
+import { AuditScanControls } from "@/components/websites/audit-scan-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,7 +41,6 @@ interface Website {
 
 interface WebsiteTableProps {
   websites: Website[];
-  onScanTrigger?: (websiteId: string) => void;
 }
 
 type SortKey = "name" | "overallScore" | "frequency" | "lastScan";
@@ -128,7 +128,7 @@ function SortButton({
   );
 }
 
-export function WebsiteTable({ websites, onScanTrigger }: WebsiteTableProps) {
+export function WebsiteTable({ websites }: WebsiteTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [, startTransition] = useTransition();
@@ -220,17 +220,15 @@ export function WebsiteTable({ websites, onScanTrigger }: WebsiteTableProps) {
               </Badge>
 
               <div className="flex items-center gap-1 justify-end">
-                {onScanTrigger && (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => onScanTrigger(site.id)}
-                    disabled={latestScan?.status === "RUNNING"}
-                    title="Audit now"
-                  >
-                    <Zap />
-                  </Button>
-                )}
+                <AuditScanControls
+                  websiteId={site.id}
+                  runningScanId={
+                    latestScan?.status === "RUNNING" ? latestScan.id : null
+                  }
+                  iconOnly
+                  runVariant="ghost"
+                  size="icon-sm"
+                />
                 <Button
                   variant="ghost"
                   size="icon-sm"

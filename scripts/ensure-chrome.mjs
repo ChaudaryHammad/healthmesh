@@ -29,10 +29,16 @@ function hasPuppeteerChrome() {
   }
 }
 
+if (process.env.SKIP_CHROME_DOWNLOAD === "1" || process.env.SKIP_CHROME_DOWNLOAD === "true") {
+  console.log("[postinstall] Skipping Chrome download (SKIP_CHROME_DOWNLOAD is set).");
+  process.exit(0);
+}
+
 if (hasPuppeteerChrome() || hasSystemChrome()) {
   console.log("[postinstall] Chrome available for Puppeteer audits.");
   process.exit(0);
 }
 
 console.log("[postinstall] Downloading Chrome for Puppeteer (one-time)…");
+console.log("[postinstall] Tip: install Google Chrome or set SKIP_CHROME_DOWNLOAD=1 to skip.");
 execSync("npx puppeteer browsers install chrome", { stdio: "inherit" });

@@ -16,25 +16,11 @@ export const authConfig = {
 
       if (isOnDashboard) {
         if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login
+        return false;
       } else if (isLoggedIn && isOnAuth) {
         return Response.redirect(new URL("/dashboard", nextUrl));
       }
       return true;
-    },
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as any).role || "USER";
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (token && session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-      }
-      return session;
     },
   },
   providers: [], // Added in auth.ts

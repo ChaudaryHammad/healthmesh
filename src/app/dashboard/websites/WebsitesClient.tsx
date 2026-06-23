@@ -40,10 +40,9 @@ interface Website {
 
 interface WebsitesClientProps {
   initialWebsites: Website[];
-  onScanTrigger: (websiteId: string) => void;
 }
 
-export default function WebsitesClient({ initialWebsites, onScanTrigger }: WebsitesClientProps) {
+export default function WebsitesClient({ initialWebsites }: WebsitesClientProps) {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [view, setView] = useState<"grid" | "table">("grid");
@@ -114,11 +113,11 @@ export default function WebsitesClient({ initialWebsites, onScanTrigger }: Websi
         view === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((site) => (
-              <WebsiteCard key={site.id} website={site} onScanTrigger={onScanTrigger} />
+              <WebsiteCard key={site.id} website={site} />
             ))}
           </div>
         ) : (
-          <WebsiteTable websites={filtered} onScanTrigger={onScanTrigger} />
+          <WebsiteTable websites={filtered} />
         )
       ) : (
         <Card className="rounded-3xl border-border/30">

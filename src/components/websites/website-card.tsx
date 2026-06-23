@@ -4,6 +4,7 @@ import React, { useTransition } from "react";
 import Link from "next/link";
 import { Globe, AlertCircle, ArrowRight, Trash2, Edit } from "lucide-react";
 import { deleteWebsiteAction } from "@/actions/websites";
+import { AuditScanControls } from "@/components/websites/audit-scan-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -37,7 +38,6 @@ interface Website {
 
 interface WebsiteCardProps {
   website: Website;
-  onScanTrigger?: (websiteId: string) => void;
 }
 
 function ScoreBadge({ score }: { score: number | null }) {
@@ -60,7 +60,7 @@ function ScoreBadge({ score }: { score: number | null }) {
   );
 }
 
-export function WebsiteCard({ website, onScanTrigger }: WebsiteCardProps) {
+export function WebsiteCard({ website }: WebsiteCardProps) {
   const [isPending, startTransition] = useTransition();
   const latestScan = website.scans[0];
 
@@ -148,17 +148,13 @@ export function WebsiteCard({ website, onScanTrigger }: WebsiteCardProps) {
         </Badge>
 
         <div className="flex items-center gap-3">
-          {onScanTrigger && (
-            <Button
-              variant="link"
-              size="sm"
-              className="h-auto p-0 text-xs"
-              onClick={() => onScanTrigger(website.id)}
-              disabled={isPending || latestScan?.status === "RUNNING"}
-            >
-              {latestScan?.status === "RUNNING" ? "Auditing..." : "Audit now"}
-            </Button>
-          )}
+          <AuditScanControls
+            websiteId={website.id}
+            runningScanId={
+              latestScan?.status === "RUNNING" ? latestScan.id : null
+            }
+            className="h-auto p-0 text-xs"
+          />
           <ButtonLink
             href={`/dashboard/websites/${website.id}`}
             variant="link"

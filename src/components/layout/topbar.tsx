@@ -6,11 +6,14 @@ import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./theme-toggle";
 import { Menu, User, Settings, LogOut, ChevronDown } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
+import { getUserDisplayName } from "@/lib/user-display";
+import { UserAvatar } from "@/components/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -29,6 +32,7 @@ interface TopbarProps {
 
 export function Topbar({ user, onMenuClick }: TopbarProps) {
   const pathname = usePathname();
+  const displayName = getUserDisplayName(user?.name, user?.email);
 
   const getBreadcrumbs = () => {
     const segments = pathname.split("/").filter(Boolean);
@@ -46,36 +50,28 @@ export function Topbar({ user, onMenuClick }: TopbarProps) {
       if (name === "Websites") name = "Websites";
       if (name === "Reports") name = "Reports";
       if (name === "Issues") name = "Issues";
+      if (name === "Settings") name = "Settings";
+      if (name === "Billing") name = "Billing";
 
       return { name, href };
     });
   };
 
   const breadcrumbs = getBreadcrumbs();
-  const userInitials = user?.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : user?.email
-    ? user.email.slice(0, 2).toUpperCase()
-    : "US";
 
   return (
-    <header className="flex items-center h-16 px-6 bg-card border-b border-border/40 justify-between shrink-0">
-      <div className="flex items-center gap-4">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/40 bg-card px-4 sm:px-6">
+      <div className="flex min-w-0 items-center gap-4">
         <Button variant="outline" size="icon-sm" className="md:hidden" onClick={onMenuClick}>
           <Menu />
         </Button>
 
-        <nav className="hidden sm:flex items-center space-x-1.5 text-sm font-medium text-muted-foreground">
+        <nav className="hidden items-center space-x-1.5 text-sm font-medium text-muted-foreground sm:flex">
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={crumb.href}>
-              {idx > 0 && <span className="text-muted-foreground/30 font-normal">/</span>}
+              {idx > 0 && <span className="font-normal text-muted-foreground/30">/</span>}
               {idx === breadcrumbs.length - 1 ? (
-                <span className="text-foreground font-semibold">{crumb.name}</span>
+                <span className="font-semibold text-foreground">{crumb.name}</span>
               ) : (
                 <Button
                   variant="link"
@@ -98,37 +94,61 @@ export function Topbar({ user, onMenuClick }: TopbarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="outline" size="sm" className="gap-2 pl-1.5 pr-2">
-                {user?.image ? (
-                  <img
-                    src={user.image}
-                    alt="Avatar"
-                    className="w-7 h-7 rounded-lg object-cover border border-border/30"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
-                    {userInitials}
-                  </div>
-                )}
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 max-w-[240px] gap-2.5 rounded-xl pl-1.5 pr-2.5"
+              >
+                <UserAvatar
+                  name={user?.name}
+                  email={user?.email}
+                  image={user?.image}
+                  size="sm"
+                  className="rounded-lg"
+                  fallbackClassName="rounded-lg"
+                />
+                <span className="hidden min-w-0 flex-1 truncate text-left sm:block">
+                  <span className="block truncate text-sm font-semibold text-foreground">
+                    {displayName}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {user?.email}
+                  </span>
+                </span>
+                <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
               </Button>
             }
           />
 
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="font-normal">
-              <p className="text-sm font-bold text-foreground truncate">{user?.name || "User"}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
-              <Badge variant="outline" className="mt-1.5 text-[10px] uppercase tracking-wider">
-                {user?.role || "User"}
-              </Badge>
-            </DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="flex items-center gap-3 px-2 py-3">
+                  <UserAvatar
+                    name={user?.name}
+                    email={user?.email}
+                    image={user?.image}
+                    size="lg"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-foreground">{displayName}</p>
+                    <p className="truncate text-xs text-muted-foreground">{user?.email || ""}</p>
+                    <Badge
+                      variant="outline"
+                      className="mt-1.5 text-[10px] uppercase tracking-wider"
+                    >
+                      {user?.role || "User"}
+                    </Badge>
+                  </div>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
               <User />
               Profile Settings
             </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/dashboard/settings/account" />}>
+            <DropdownMenuItem render={<Link href="/dashboard/settings/billing" />}>
               <Settings />
               Account Settings
             </DropdownMenuItem>

@@ -32,10 +32,10 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 | Billing & payments | ❌ | Pricing page only — no Stripe, trials, or plan enforcement |
 | Admin dashboard | ❌ | `Role.ADMIN` in schema; no `/admin` routes or UI |
 | Scheduled scans | 🟡 | `scanFrequency` saved in DB; no cron / Trigger.dev jobs |
-| Reports (PDF/export) | ❌ | `Report` model + sidebar link; no generator or pages |
-| Issue center | ❌ | Sidebar link only (`/dashboard/issues`) |
-| Account settings | ❌ | Topbar links only (`/dashboard/settings`) |
-| Background jobs | ❌ | `TRIGGER_SECRET_KEY` in env; Trigger.dev not integrated |
+| Reports (PDF/export) | ✅ | `/dashboard/reports` — generate, download, delete |
+| Issue center | ✅ | Portfolio inbox at `/dashboard/issues` |
+| Account settings | 🟡 | Profile + billing UI; Stripe checkout not wired |
+| Background jobs | 🟡 | Trigger.dev `run-audit` task + `USE_TRIGGER_DEV` toggle; no scheduled cron yet |
 | Screenshots / Cloudinary | ❌ | Env + `Scan.screenshot` field; upload not implemented |
 | Plan limits | ❌ | No site caps, history retention, or feature gating |
 | Automated tests | ❌ | Vitest in devDependencies; no test files |
@@ -68,9 +68,9 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 | Forgot / reset password | ✅ | SMTP emails + token expiry |
 | OAuth (Google, GitHub, etc.) | ❌ | Credentials only |
 | User roles (`USER` / `ADMIN`) | 🟡 | Enum + field on `User`; only `USER` flow built |
-| Soft delete users | 🟡 | `deletedAt` on `User`; not used in auth flows |
-| Account settings page | ❌ | `/dashboard/settings` not implemented |
-| Profile / avatar upload | ❌ | `image` field exists; no upload UI |
+| Soft delete users | 🟡 | `deletedAt` on `User`; used by delete-account flow |
+| Account settings page | ✅ | `/dashboard/settings` — profile, password, delete account |
+| Profile / avatar upload | 🟡 | Cloudinary upload/remove on settings; topbar avatar |
 
 ---
 
@@ -94,9 +94,9 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 | Dashboard shell (sidebar, topbar, mobile nav) | ✅ | shadcn components, theme toggle |
 | Overview (`/dashboard`) | ✅ | Stats cards, network score summary, recent scans & activity |
 | Activity logging | ✅ | `ActivityLog` on key actions |
-| Reports nav item | 🟡 | Links to `/dashboard/reports` — **404** |
-| Issue center nav item | 🟡 | Links to `/dashboard/issues` — **404** |
-| Settings nav item | 🟡 | Links to `/dashboard/settings` — **404** |
+| Reports nav item | ✅ | `/dashboard/reports` — PDF + CSV library |
+| Issue center nav item | ✅ | `/dashboard/issues` — filters, acknowledge, CSV export |
+| Settings nav item | ✅ | Profile + billing tabs at `/dashboard/settings` |
 
 ---
 
@@ -108,7 +108,7 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 | Add / edit website | ✅ | Name, URL, scan frequency select |
 | Delete website | ✅ | Soft delete + confirm |
 | Website overview (`/dashboard/websites/[id]`) | ✅ | Gauges, Core Web Vitals, audit links, score chart, scan history |
-| Manual audit trigger | ✅ | `triggerScanAction` — synchronous server action |
+| Manual audit trigger | ✅ | `startScanAction` → async execute API; optional Trigger.dev |
 | Scan results in DB | ✅ | Scores, vitals, issues stored on `Scan` + `Issue` |
 | Scan frequency field | 🟡 | Saved (`MANUAL` / `DAILY` / `WEEKLY` / `MONTHLY`) but **not executed** |
 | Scan screenshots | ❌ | `Scan.screenshot` unused |
@@ -173,14 +173,14 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 1. Add Prisma models: `Subscription`, plan tier, trial dates  
 2. Stripe Checkout + Customer Portal + webhooks  
 3. `getEntitlements()` helper — server checks on every gated action  
-4. Settings → Billing tab + reusable `UpgradeModal`  
+4. Settings → Billing tab + reusable `UpgradeModal` (billing tab UI ✅; Stripe + modal pending)  
 5. Enforce website count + feature flags per plan  
 
 ---
 
 ## Product design — Reports, Issues, Settings & Billing
 
-Product spec for sidebar modules that are **not built yet**. This explains how they differ from pages you already have (e.g. per-website Performance / SEO tabs).
+Product spec for sidebar modules. **Settings** (profile + billing placeholder) is implemented; **Reports** and **Issues** are not built yet.
 
 ### How dashboard areas relate
 
@@ -413,13 +413,13 @@ model Subscription {
 
 | Item | Status | Details |
 |------|--------|---------|
-| `Report` Prisma model | 🟡 | Schema only (`fileUrl`, Cloudinary) |
-| `/dashboard/reports` page | ❌ | List + generate + download |
-| Full audit PDF | ❌ | Scores + issues by category |
-| Executive summary PDF | ❌ | Pro+ |
-| Broken links export | ❌ | After findings persisted |
-| Comparison report | ❌ | Two scans side-by-side |
-| CSV issue export | ❌ | From reports or issue center |
+| `Report` Prisma model | ✅ | `type`, `format`, Cloudinary URL + public ID |
+| `/dashboard/reports` page | ✅ | List + generate dialog + download + delete |
+| Full audit PDF | ✅ | Scores, vitals, issues by category |
+| Executive summary PDF | ✅ | Score deltas vs previous scan + top fixes |
+| Broken links export | ❌ | After findings persisted to DB |
+| Comparison report | 🟡 | Partial — executive summary includes deltas |
+| CSV issue export | ✅ | Per-scan issues CSV via reports |
 | Email scheduled reports | ❌ | v2 — weekly digest attachment |
 
 ---
@@ -430,12 +430,13 @@ model Subscription {
 
 | Item | Status | Details |
 |------|--------|---------|
-| `/dashboard/issues` page | ❌ | Portfolio-wide issue inbox |
-| Cross-site issue aggregation | ❌ | Issues exist per-scan in DB |
-| Filter by severity / category / site | ❌ | Per audit page only today |
-| Issue states (OPEN / ACK / RESOLVED) | ❌ | Schema + auto-resolve on re-scan |
-| Deep link to category audit page | ❌ | |
-| Mark acknowledged | ❌ | v2 |
+| `/dashboard/issues` page | ✅ | Portfolio-wide inbox from latest audit per site |
+| Cross-site issue aggregation | ✅ | Latest completed scan per website |
+| Filter by severity / category / site | ✅ | Search, chips, status filters |
+| Issue states (OPEN / ACK / RESOLVED) | ✅ | Schema + acknowledge + auto-resolve on re-scan |
+| Deep link to category audit page | ✅ | View in audit per row |
+| Mark acknowledged | ✅ | Single + bulk acknowledge/reopen |
+| Export CSV | ✅ | Filtered export |
 
 ---
 
@@ -445,11 +446,11 @@ model Subscription {
 
 | Item | Status | Details |
 |------|--------|---------|
-| `/dashboard/settings` layout + tabs | ❌ | |
-| Profile tab | ❌ | Name, email, password, delete account |
-| Billing tab | ❌ | Plan, usage, Stripe Checkout / Portal |
-| Notifications tab | ❌ | v2 |
-| Upgrade modal component | ❌ | Shared paywall dialog |
+| `/dashboard/settings` layout + tabs | ✅ | Profile + Billing nav |
+| Profile tab | ✅ | Name, email display, change password, delete account |
+| Billing tab | 🟡 | Plan + usage UI at `/dashboard/settings/billing`; Stripe Checkout / Portal pending |
+| Notifications tab | 🚫 | v2 |
+| Upgrade modal component | ❌ | Shared paywall dialog (Phase A) |
 
 ---
 
@@ -457,9 +458,9 @@ model Subscription {
 
 | Item | Status | Details |
 |------|--------|---------|
-| Trigger.dev | ❌ | Key in `.env.example` / `env.ts`; no tasks |
+| Trigger.dev | 🟡 | `run-audit` task + `USE_TRIGGER_DEV`; scheduled scans not wired |
 | Cron / scheduled audits | ❌ | `scanFrequency` not read by any worker |
-| Async audit queue | 🟡 | Audits run inline in server action (can timeout on long scans) |
+| Async audit queue | ✅ | `POST /api/audits/[scanId]/execute` + client polling; cancel support |
 | Broken link execute API | ✅ | `POST /api/broken-links/[scanId]/execute` (`maxDuration` 300s) |
 
 **Suggested approach**
@@ -475,7 +476,7 @@ model Subscription {
 |------|--------|---------|
 | PostgreSQL + Prisma | ✅ | Full schema, migrations via `db push` |
 | Puppeteer / Chrome for audits | ✅ | `ensure-chrome.mjs` postinstall |
-| Cloudinary | 🟡 | Required in `env.ts`; no upload code |
+| Cloudinary | 🟡 | Profile photos + report files (PDF/CSV raw uploads) |
 | Custom theme (dark/light) | ✅ | No `next-themes` flash warning |
 | shadcn/ui design system | ✅ | Marketing, auth, dashboard |
 | Middleware / route protection | ✅ | Dashboard behind auth |
@@ -518,7 +519,7 @@ Priority order for a shippable paid SaaS:
 - [ ] `Subscription` model + trial on register  
 - [ ] Stripe Checkout + Customer Portal + webhooks  
 - [ ] `getEntitlements()` + server gates (sites, scans, features)  
-- [ ] Settings → Billing tab  
+- [ ] Settings → Billing tab (Stripe checkout + portal)  
 - [ ] `UpgradeModal` component (paywall dialog)  
 
 ### Phase B — Operations
@@ -532,9 +533,9 @@ Priority order for a shippable paid SaaS:
 - [ ] Subscription overview + manual overrides (support)  
 
 ### Phase D — Product completeness
-- [ ] **Issue center** — portfolio inbox + OPEN/RESOLVED states  
-- [ ] **Reports** — PDF generation, list page, Cloudinary storage  
-- [ ] **Settings** — profile + billing tabs  
+- [x] **Issue center** — portfolio inbox + OPEN/ACK/RESOLVED states  
+- [x] **Reports** — PDF generation, list page, Cloudinary storage  
+- [x] **Settings** — profile + billing tabs (billing placeholder until Stripe)  
 - [ ] Audit screenshots via Cloudinary  
 - [ ] OAuth providers (optional)  
 

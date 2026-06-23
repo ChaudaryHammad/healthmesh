@@ -16,8 +16,8 @@ export async function runFullAudit(url: string): Promise<AuditResult> {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800 });
     await page.goto(normalizedUrl, {
-      waitUntil: "networkidle2",
-      timeout: 60000,
+      waitUntil: "domcontentloaded",
+      timeout: 45000,
     });
 
     const html = await page.content();
