@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   assertIssueOwnership,
+  deleteIssuesForUser,
   getPortfolioIssuesForUser,
 } from "@/lib/issue-service";
 import { revalidatePath } from "next/cache";
@@ -107,5 +108,52 @@ export async function bulkUpdateIssueStatusAction(
   } catch (error) {
     console.error("Bulk update issue status error:", error);
     return { success: false, error: "Failed to update issues." };
+  }
+}
+
+export async function deleteIssueAction(issueId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized." };
+  }
+
+  try {
+    const deleted = await deleteIssuesForUser(session.user.id, [issueId]);
+    if (deleted.length === 0) {
+      return { success: false, error: "Issue not found." };
+    }
+
+    revalidatePath("/dashboard/issues");
+    return { success: true, message: "Issue dismissed." };
+  } catch (error) {
+    console.error("Delete issue error:", error);
+    return { success: false, error: "Failed to dismiss issue." };
+  }
+}
+
+export async function bulkDeleteIssuesAction(issueIds: string[]) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized." };
+  }
+
+  if (issueIds.length === 0) {
+    return { success: false, error: "No issues selected." };
+  }
+
+  try {
+    const deleted = await deleteIssuesForUser(session.user.id, issueIds);
+    if (deleted.length === 0) {
+      return { success: false, error: "No valid issues to dismiss." };
+    }
+
+    revalidatePath("/dashboard/issues");
+    return {
+      success: true,
+      message: `${deleted.length} issue${deleted.length === 1 ? "" : "s"} dismissed.`,
+    };
+  } catch (error) {
+    console.error("Bulk delete issues error:", error);
+    return { success: false, error: "Failed to dismiss issues." };
   }
 }

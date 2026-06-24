@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./theme-toggle";
-import { Menu, User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Menu, User, Settings, LogOut, ChevronDown, Shield } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { getUserDisplayName } from "@/lib/user-display";
 import { UserAvatar } from "@/components/user-avatar";
@@ -152,6 +152,12 @@ export function Topbar({ user, onMenuClick }: TopbarProps) {
               <Settings />
               Account Settings
             </DropdownMenuItem>
+            {user?.role === "ADMIN" && (
+              <DropdownMenuItem render={<Link href="/admin" />}>
+                <Shield />
+                Admin panel
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => logoutAction()}>
               <LogOut />

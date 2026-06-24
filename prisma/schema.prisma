@@ -67,6 +67,26 @@ enum ReportType {
   ISSUES_CSV
 }
 
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PlanTier {
+  STARTER
+  PRO
+  AGENCY
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
 // ─── USER & AUTH ──────────────────────────────────
 model User {
   id              String    @id @default(cuid())
@@ -84,6 +104,7 @@ model User {
   accounts        Account[]
   sessions        Session[]
   activityLogs    ActivityLog[]
+  subscription    Subscription?
 
   @@index([email])
   @@index([deletedAt])
@@ -318,6 +339,44 @@ model NewsletterSubscriber {
 
   @@index([email])
   @@map("newsletter_subscribers")
+}
+
+// ─── SUBSCRIPTIONS (billing — Stripe webhooks pending) ─
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  plan                 PlanTier?
+  status               SubscriptionStatus @default(TRIALING)
+  trialEndsAt          DateTime?
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  adminNotes           String?            @db.Text
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([plan])
+  @@map("subscriptions")
+}
+
+// ─── CONTACT INBOX ───────────────────────────────
+model ContactMessage {
+  id        String               @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String               @db.Text
+  status    ContactMessageStatus @default(NEW)
+  createdAt DateTime             @default(now())
+  readAt    DateTime?
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("contact_messages")
 }
 
 // ─── ACTIVITY LOG ────────────────────────────────

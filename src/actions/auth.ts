@@ -2,6 +2,7 @@
 
 import { signIn, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createTrialSubscription } from "@/lib/subscription";
 import bcrypt from "bcryptjs";
 import {
   loginSchema,
@@ -78,6 +79,8 @@ export async function registerAction(values: any) {
         role: "USER",
       },
     });
+
+    await createTrialSubscription(user.id);
 
     const token = generateSecureToken();
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);

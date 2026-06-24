@@ -38,8 +38,26 @@ const createPrismaClient = () => {
   return new PrismaClient({ adapter });
 };
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+/** Dev HMR can keep an old PrismaClient after `prisma generate` adds models. */
+function isStalePrismaClient(client: PrismaClient) {
+  return !("contactMessage" in client) || !("subscription" in client);
 }
+
+function getPrismaClient() {
+  const cached = globalForPrisma.prisma;
+  if (cached && !isStalePrismaClient(cached)) {
+    return cached;
+  }
+
+  if (cached) {
+    void cached.$disconnect();
+  }
+
+  const client = createPrismaClient();
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
+  }
+  return client;
+}
+
+export const prisma = getPrismaClient();

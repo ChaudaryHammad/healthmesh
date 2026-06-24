@@ -153,6 +153,37 @@ export async function assertIssueOwnership(issueId: string, userId: string) {
         website: { userId, deletedAt: null },
       },
     },
-    select: { id: true, status: true },
+    select: { id: true, status: true, title: true, scanId: true },
   });
+}
+
+export async function deleteIssuesForUser(userId: string, issueIds: string[]) {
+  if (issueIds.length === 0) return [];
+
+  const owned = await prisma.issue.findMany({
+    where: {
+      id: { in: issueIds },
+      scan: { website: { userId, deletedAt: null } },
+    },
+    select: { id: true, title: true, scanId: true },
+  });
+
+  if (owned.length === 0) return [];
+
+  const ownedIds = owned.map((i) => i.id);
+
+  await prisma.issue.deleteMany({
+    where: { id: { in: ownedIds } },
+  });
+
+  await prisma.activityLog.createMany({
+    data: owned.map((issue) => ({
+      userId,
+      action: "ISSUE_DISMISSED",
+      description: `Dismissed issue "${issue.title}"`,
+      metadata: { issueId: issue.id, scanId: issue.scanId },
+    })),
+  });
+
+  return ownedIds;
 }

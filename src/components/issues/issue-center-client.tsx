@@ -8,6 +8,8 @@ import {
   AlertTriangle,
   CheckCheck,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Download,
   ExternalLink,
@@ -19,10 +21,13 @@ import {
   RotateCcw,
   Search,
   Shield,
+  Trash2,
   X,
 } from "lucide-react";
 import {
+  bulkDeleteIssuesAction,
   bulkUpdateIssueStatusAction,
+  deleteIssueAction,
   updateIssueStatusAction,
   type PortfolioIssue,
 } from "@/actions/issues";
@@ -75,6 +80,7 @@ type SeverityFilter = IssueSeverity | "ALL";
 
 const SEVERITIES: IssueSeverity[] = ["CRITICAL", "MAJOR", "MINOR", "INFO"];
 const CATEGORIES = ["PERFORMANCE", "ACCESSIBILITY", "SEO", "SECURITY", "BROKEN_LINKS"] as const;
+const PAGE_SIZE = 20;
 
 function CategoryIcon({ category }: { category: PortfolioIssue["category"] }) {
   const className = "size-3.5";
@@ -144,6 +150,7 @@ export function IssueCenterClient({ websites, issues: initialIssues }: IssueCent
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("OPEN");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -192,14 +199,41 @@ export function IssueCenterClient({ websites, issues: initialIssues }: IssueCent
     });
   }, [issues, search, websiteFilter, categoryFilter, severityFilter, statusFilter]);
 
-  const allVisibleSelected =
-    filteredIssues.length > 0 && filteredIssues.every((i) => selectedIds.has(i.id));
+  const totalPages = Math.max(1, Math.ceil(filteredIssues.length / PAGE_SIZE));
+  const paginatedIssues = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredIssues.slice(start, start + PAGE_SIZE);
+  }, [filteredIssues, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, websiteFilter, categoryFilter, severityFilter, statusFilter]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const pageStart = filteredIssues.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const pageEnd = Math.min(page * PAGE_SIZE, filteredIssues.length);
+
+  const allPageSelected =
+    paginatedIssues.length > 0 && paginatedIssues.every((i) => selectedIds.has(i.id));
 
   const toggleSelectAll = () => {
-    if (allVisibleSelected) {
-      setSelectedIds(new Set());
+    if (allPageSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        paginatedIssues.forEach((i) => next.delete(i.id));
+        return next;
+      });
     } else {
-      setSelectedIds(new Set(filteredIssues.map((i) => i.id)));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        paginatedIssues.forEach((i) => next.add(i.id));
+        return next;
+      });
     }
   };
 
@@ -225,6 +259,63 @@ export function IssueCenterClient({ websites, issues: initialIssues }: IssueCent
       )
     );
     setSelectedIds(new Set());
+  };
+
+  const removeLocalIssues = (ids: string[]) => {
+    setIssues((prev) => prev.filter((issue) => !ids.includes(issue.id)));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+    if (expandedId && ids.includes(expandedId)) {
+      setExpandedId(null);
+    }
+  };
+
+  const handleDismiss = (issueId: string, title: string) => {
+    if (!confirm(`Dismiss "${title}"? It will be permanently removed from your issue list.`)) {
+      return;
+    }
+
+    setMessage(null);
+    setError(null);
+    startTransition(async () => {
+      const res = await deleteIssueAction(issueId);
+      if (res.success) {
+        removeLocalIssues([issueId]);
+        setMessage(res.message ?? "Issue dismissed.");
+        router.refresh();
+      } else {
+        setError(res.error ?? "Failed to dismiss issue.");
+      }
+    });
+  };
+
+  const handleBulkDismiss = () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    if (
+      !confirm(
+        `Dismiss ${ids.length} selected issue${ids.length === 1 ? "" : "s"}? They will be permanently removed.`
+      )
+    ) {
+      return;
+    }
+
+    setMessage(null);
+    setError(null);
+    startTransition(async () => {
+      const res = await bulkDeleteIssuesAction(ids);
+      if (res.success) {
+        removeLocalIssues(ids);
+        setMessage(res.message ?? "Issues dismissed.");
+        router.refresh();
+      } else {
+        setError(res.error ?? "Failed to dismiss issues.");
+      }
+    });
   };
 
   const handleStatusUpdate = (issueId: string, status: "OPEN" | "ACKNOWLEDGED") => {
@@ -370,6 +461,16 @@ export function IssueCenterClient({ websites, issues: initialIssues }: IssueCent
                     <RotateCcw />
                     Reopen
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isPending}
+                    onClick={handleBulkDismiss}
+                    className="text-rose-500 hover:text-rose-500"
+                  >
+                    <Trash2 />
+                    Dismiss ({selectedIds.size})
+                  </Button>
                 </>
               )}
             </div>
@@ -502,14 +603,15 @@ export function IssueCenterClient({ websites, issues: initialIssues }: IssueCent
               </Button>
             </div>
           ) : (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10 pl-4">
                     <Checkbox
-                      checked={allVisibleSelected}
+                      checked={allPageSelected}
                       onCheckedChange={toggleSelectAll}
-                      aria-label="Select all visible issues"
+                      aria-label="Select all issues on this page"
                     />
                   </TableHead>
                   <TableHead>Issue</TableHead>
@@ -521,7 +623,7 @@ export function IssueCenterClient({ websites, issues: initialIssues }: IssueCent
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredIssues.map((issue) => {
+                {paginatedIssues.map((issue) => {
                   const isExpanded = expandedId === issue.id;
                   return (
                     <React.Fragment key={issue.id}>
@@ -614,6 +716,16 @@ export function IssueCenterClient({ websites, issues: initialIssues }: IssueCent
                                 <RotateCcw />
                               </Button>
                             )}
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              title="Dismiss"
+                              disabled={isPending}
+                              className="text-muted-foreground hover:text-rose-500"
+                              onClick={() => handleDismiss(issue.id, issue.title)}
+                            >
+                              <Trash2 />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -655,6 +767,37 @@ export function IssueCenterClient({ websites, issues: initialIssues }: IssueCent
                 })}
               </TableBody>
             </Table>
+            {totalPages > 1 && (
+              <div className="flex flex-col gap-3 border-t border-border/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing {pageStart}–{pageEnd} of {filteredIssues.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    <ChevronLeft />
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground tabular-nums">
+                    Page {page} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                    <ChevronRight />
+                  </Button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </CardContent>
       </Card>

@@ -11,7 +11,8 @@ import {
   AlertTriangle, 
   Settings, 
   X,
-  LogOut
+  LogOut,
+  Shield,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -19,9 +20,10 @@ import { Button } from "@/components/ui/button";
 interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
+  isAdmin?: boolean;
 }
 
-export function MobileNav({ isOpen, onClose }: MobileNavProps) {
+export function MobileNav({ isOpen, onClose, isAdmin = false }: MobileNavProps) {
   const pathname = usePathname();
 
   // Close mobile drawer on route change
@@ -88,6 +90,15 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 mt-3"
+            >
+              <Shield className="w-4 h-4" />
+              <span>Admin panel</span>
+            </Link>
+          )}
         </nav>
 
         {/* Logout button in drawer footer */}

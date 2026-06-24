@@ -237,6 +237,14 @@ Open http://localhost:3000
 | `/pricing` | Pricing page |
 | `/features` | Features page |
 | `/contact` | Contact page |
+| `/admin` | Admin overview (requires `ADMIN` role) |
+| `/admin/users` | User management |
+| `/admin/websites` | Cross-tenant websites |
+| `/admin/billing` | Subscriptions + manual overrides |
+| `/admin/newsletter` | Newsletter subscribers |
+| `/admin/contacts` | Support inbox |
+
+> **Admin access:** In Prisma Studio, set a user's `role` to `ADMIN`, then sign out and back in. Admin link appears in the sidebar.
 
 ---
 

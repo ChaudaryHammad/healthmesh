@@ -12,12 +12,13 @@ import {
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  LogOut
+  LogOut,
+  Shield,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 
-export function Sidebar() {
+export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -76,6 +77,15 @@ export function Sidebar() {
             </Link>
           );
         })}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 mt-3"
+          >
+            <Shield className="w-4 h-4 shrink-0" />
+            {!collapsed && <span className="truncate">Admin panel</span>}
+          </Link>
+        )}
       </nav>
 
       {/* Logout Footer */}

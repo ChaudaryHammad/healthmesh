@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { sendEmail } from "@/lib/email/send-email";
 import { getSupportEmail } from "@/lib/email/config";
+import { prisma } from "@/lib/prisma";
 import {
   renderContactConfirmationEmail,
   renderContactSupportEmail,
@@ -39,6 +40,10 @@ export async function submitContactForm(values: unknown) {
       to: email,
       subject: confirmationMail.subject,
       html: confirmationMail.html,
+    });
+
+    await prisma.contactMessage.create({
+      data: { name, email, subject, message },
     });
 
     return {

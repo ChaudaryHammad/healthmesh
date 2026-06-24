@@ -33,10 +33,10 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
     <TooltipProvider>
       <div className="flex h-screen w-screen overflow-hidden bg-background">
       {/* Desktop Collapsible Sidebar */}
-      <Sidebar />
+      <Sidebar isAdmin={user?.role === "ADMIN"} />
 
       {/* Mobile Drawer Navigation */}
-      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} isAdmin={user?.role === "ADMIN"} />
 
       {/* Main Panel */}
       <div className="flex flex-col flex-1 h-full min-w-0">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -18,6 +18,8 @@ import {
   Eye,
   Download,
   FileText,
+  Filter,
+  Search,
 } from "lucide-react";
 import {
   startBrokenLinkScanAction,
@@ -40,9 +42,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Severity = "CRITICAL" | "MAJOR" | "MINOR" | "INFO";
+type SeverityFilter = Severity | "ALL";
+
+const SEVERITIES: Severity[] = ["CRITICAL", "MAJOR", "MINOR", "INFO"];
 
 interface SerializedResult {
   id: string;
@@ -372,6 +378,8 @@ export function BrokenLinksClient({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [pdfFilename, setPdfFilename] = useState<string | null>(null);
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("ALL");
+  const [resultSearch, setResultSearch] = useState("");
   const [pollingId, setPollingId] = useState<string | null>(
     initialScan?.status === "RUNNING" ? initialScan.id : null
   );
@@ -430,6 +438,8 @@ export function BrokenLinksClient({
     setIsStarting(true);
     setStartingMode(scanMode);
     setLiveResults([]);
+    setSeverityFilter("ALL");
+    setResultSearch("");
     if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
     setPdfBlobUrl(null);
     setPdfFilename(null);
@@ -576,6 +586,32 @@ export function BrokenLinksClient({
   };
 
   const results = liveResults;
+  const severityCounts = useMemo(() => {
+    return SEVERITIES.reduce(
+      (acc, severity) => {
+        acc[severity] = results.filter((r) => r.severity === severity).length;
+        return acc;
+      },
+      {} as Record<Severity, number>
+    );
+  }, [results]);
+
+  const filteredResults = useMemo(() => {
+    const query = resultSearch.trim().toLowerCase();
+
+    return results.filter((result) => {
+      if (severityFilter !== "ALL" && result.severity !== severityFilter) return false;
+      if (!query) return true;
+
+      return (
+        result.href.toLowerCase().includes(query) ||
+        result.sourcePageUrl.toLowerCase().includes(query) ||
+        (result.statusCode?.toString().includes(query) ?? false)
+      );
+    });
+  }, [results, severityFilter, resultSearch]);
+
+  const hasActiveResultFilters = severityFilter !== "ALL" || resultSearch.trim().length > 0;
   const showProgress = isScanning || activeScan?.status === "RUNNING";
 
   const isModeBusy = (scanMode: BrokenLinkScanMode) =>
@@ -848,12 +884,88 @@ export function BrokenLinksClient({
       ) : (
         results.length > 0 && (
           <div className="space-y-3">
+            <div className="flex flex-col gap-3 rounded-2xl border border-border/30 bg-card p-4">
+              <div className="relative w-full max-w-md">
+                <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={resultSearch}
+                  onChange={(e) => setResultSearch(e.target.value)}
+                  placeholder="Search URL or source page…"
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={severityFilter === "ALL" ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setSeverityFilter("ALL")}
+                >
+                  <Filter className="size-3.5" />
+                  All ({results.length})
+                </Button>
+                {SEVERITIES.map((severity) => {
+                  const count = severityCounts[severity];
+                  if (count === 0) return null;
+                  return (
+                    <Button
+                      key={severity}
+                      variant={severityFilter === severity ? "secondary" : "outline"}
+                      size="sm"
+                      className={
+                        severityFilter === severity ? severityBadge(severity) : undefined
+                      }
+                      onClick={() =>
+                        setSeverityFilter(severityFilter === severity ? "ALL" : severity)
+                      }
+                    >
+                      <SeverityIcon severity={severity} />
+                      {severity.charAt(0) + severity.slice(1).toLowerCase()} ({count})
+                    </Button>
+                  );
+                })}
+                {hasActiveResultFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSeverityFilter("ALL");
+                      setResultSearch("");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <h2 className="text-base font-bold text-foreground">
-              Broken links ({results.length})
+              Broken links ({filteredResults.length}
+              {filteredResults.length !== results.length ? ` of ${results.length}` : ""})
             </h2>
-            {results.map((result) => (
-              <BrokenLinkCard key={result.id} result={result} />
-            ))}
+
+            {filteredResults.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border/30 bg-card py-12 text-center">
+                <Info className="size-8 text-muted-foreground" />
+                <h3 className="text-base font-bold text-foreground">No links match your filters</h3>
+                <p className="text-sm text-muted-foreground">
+                  Try a different severity or clear the search.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSeverityFilter("ALL");
+                    setResultSearch("");
+                  }}
+                >
+                  Reset filters
+                </Button>
+              </div>
+            ) : (
+              filteredResults.map((result) => (
+                <BrokenLinkCard key={result.id} result={result} />
+              ))
+            )}
           </div>
         )
       )}

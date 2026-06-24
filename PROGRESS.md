@@ -29,8 +29,8 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 | Audit engine | ✅ | Real Lighthouse, axe-core, SEO, security scans |
 | Audit report pages | ✅ | Performance, A11y, SEO, Security — rich category UIs |
 | Broken link checker | 🟡 | Full crawler + live progress; findings **not** persisted to DB |
-| Billing & payments | ❌ | Pricing page only — no Stripe, trials, or plan enforcement |
-| Admin dashboard | ❌ | `Role.ADMIN` in schema; no `/admin` routes or UI |
+| Billing & payments | 🟡 | `Subscription` model + admin overrides; Stripe checkout/webhooks pending |
+| Admin dashboard | ✅ | `/admin` — overview, users, websites, billing, newsletter, support inbox |
 | Scheduled scans | 🟡 | `scanFrequency` saved in DB; no cron / Trigger.dev jobs |
 | Reports (PDF/export) | ✅ | `/dashboard/reports` — generate, download, delete |
 | Issue center | ✅ | Portfolio inbox at `/dashboard/issues` |
@@ -384,26 +384,29 @@ model Subscription {
 
 ## 8. Admin dashboard
 
-> `User.role` includes `ADMIN` but there is **no admin app**.
+> Full admin app at `/admin` — requires `User.role = ADMIN` (set in Prisma Studio, then re-login).
 
 | Item | Status | Details |
 |------|--------|---------|
-| `/admin` route group | ❌ | |
-| Admin auth / role guard | ❌ | |
-| User management (list, ban, impersonate) | ❌ | |
-| All websites across tenants | ❌ | |
-| System metrics (scans/day, errors) | ❌ | |
-| Newsletter subscriber admin | ❌ | |
-| Contact inbox / support queue | ❌ | |
-| Manual plan overrides | ❌ | |
+| `/admin` route group | ✅ | Layout + `requireAdmin()` guard |
+| Admin auth / role guard | ✅ | `src/lib/admin-auth.ts` |
+| User management (list, ban, impersonate) | 🟡 | List, search, role, verify email, ban/restore — **no impersonation** (by design) |
+| All websites across tenants | ✅ | Cross-tenant list, disable, force scan |
+| System metrics (scans/day, errors) | ✅ | Overview dashboard |
+| Newsletter subscriber admin | ✅ | List + export active CSV |
+| Contact inbox / support queue | ✅ | `ContactMessage` model + read/archive |
+| Manual plan overrides | ✅ | Billing tab — edit plan/status/dates (Stripe sync pending) |
 
-**Suggested admin modules**
+**Admin modules (implemented)**
 
-1. **Overview** — total users, active subs, scans today, failed jobs  
-2. **Users** — search, role, verify status, soft-delete  
-3. **Websites** — cross-tenant list, force scan, disable  
-4. **Billing** — subscriptions, MRR, failed payments (after Stripe)  
-5. **Content** — newsletter list, export subscribers  
+1. **Overview** (`/admin`) — users, websites, scans today, failed jobs, MRR estimate, recent activity  
+2. **Users** (`/admin/users`) — search, role, verify status, soft-delete ban  
+3. **Websites** (`/admin/websites`) — cross-tenant list, force scan, disable  
+4. **Billing** (`/admin/billing`) — subscriptions, MRR, manual overrides; Stripe checkout still pending  
+5. **Newsletter** (`/admin/newsletter`) — subscriber list, export  
+6. **Support** (`/admin/contacts`) — contact form inbox  
+
+**Promote first admin:** Prisma Studio → `users` → set `role` to `ADMIN` → sign out and back in.
 
 ---
 
@@ -516,7 +519,7 @@ model Subscription {
 Priority order for a shippable paid SaaS:
 
 ### Phase A — Monetization (critical)
-- [ ] `Subscription` model + trial on register  
+- [x] `Subscription` model + trial on register  
 - [ ] Stripe Checkout + Customer Portal + webhooks  
 - [ ] `getEntitlements()` + server gates (sites, scans, features)  
 - [ ] Settings → Billing tab (Stripe checkout + portal)  
@@ -528,9 +531,9 @@ Priority order for a shippable paid SaaS:
 - [ ] Persist broken link findings to `BrokenLinkResult` (optional)  
 
 ### Phase C — Admin
-- [ ] `/admin` layout + `ADMIN` role guard  
-- [ ] User & website management  
-- [ ] Subscription overview + manual overrides (support)  
+- [x] `/admin` layout + `ADMIN` role guard  
+- [x] User & website management  
+- [x] Subscription overview + manual overrides (support)  
 
 ### Phase D — Product completeness
 - [x] **Issue center** — portfolio inbox + OPEN/ACK/RESOLVED states  
@@ -570,6 +573,8 @@ Keep pricing copy aligned as billing and scheduling ship.
 | Website UI | `src/components/websites/` |
 | Marketing | `src/app/(marketing)/`, `src/lib/marketing/` |
 | Auth | `src/actions/auth.ts`, `src/app/(auth)/` |
+| Admin | `src/app/admin/`, `src/actions/admin.ts`, `src/lib/admin-data.ts` |
+| Subscriptions | `src/lib/subscription.ts`, `src/lib/plans.ts` |
 | Email | `src/lib/email/` |
 | Schema | `prisma/schema.prisma` |
 

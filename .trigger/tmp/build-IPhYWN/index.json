@@ -1,0 +1,34 @@
+{
+  "configPath": "C:\\Users\\MuhammadHammad\\Documents\\loopnode\\loopnode\\.trigger\\tmp\\build-IPhYWN\\trigger.config.mjs",
+  "customConditions": [
+  ],
+  "prompts": [
+  ],
+  "queues": [
+  ],
+  "runtime": "node",
+  "runtimeVersion": "22.14.0",
+  "tasks": [
+    {
+      "entryPoint": "C:\\Users\\MuhammadHammad\\Documents\\loopnode\\loopnode\\.trigger\\tmp\\build-IPhYWN\\src\\trigger\\run-audit.mjs",
+      "filePath": "src/trigger/run-audit.ts",
+      "id": "run-audit",
+      "maxDuration": 300,
+      "retry": {
+        "factor": 2,
+        "maxAttempts": 1,
+        "maxTimeoutInMs": 60000,
+        "minTimeoutInMs": 1000,
+        "randomize": true
+      }
+    }
+  ],
+  "timings": {
+    "src/lib/prisma.ts": 484.39969999999994,
+    "src/lib/scanner/audit-runner.ts": 12681.257099999999,
+    "src/lib/scanner/complete-audit-scan.ts": 19.03729999999996,
+    "src/lib/scanner/fail-audit-scan.ts": 25.56970000000001,
+    "src/trigger/run-audit.ts": 7.6666000000004715
+  },
+  "workerEntryPoint": "C:\\Users\\MuhammadHammad\\Documents\\loopnode\\loopnode\\.trigger\\tmp\\build-IPhYWN\\node_modules\\trigger.dev\\dist\\esm\\entryPoints\\dev-run-worker.mjs"
+}
