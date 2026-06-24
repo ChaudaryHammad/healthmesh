@@ -29,7 +29,7 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 | Audit engine | ✅ | Real Lighthouse, axe-core, SEO, security scans |
 | Audit report pages | ✅ | Performance, A11y, SEO, Security — rich category UIs |
 | Broken link checker | 🟡 | Full crawler + live progress; findings **not** persisted to DB |
-| Billing & payments | 🟡 | `Subscription` model + admin overrides; Stripe checkout/webhooks pending |
+| Billing & payments | 🟡 | `Subscription` + trial ✅; Stripe Elements + webhooks planned — see [BILLING.md](./BILLING.md) |
 | Admin dashboard | ✅ | `/admin` — overview, users, websites, billing, newsletter, support inbox |
 | Scheduled scans | 🟡 | `scanFrequency` saved in DB; no cron / Trigger.dev jobs |
 | Reports (PDF/export) | ✅ | `/dashboard/reports` — generate, download, delete |
@@ -304,6 +304,8 @@ Topbar “Profile Settings” → profile tab; “Account Settings” → billin
 
 ### Subscription & billing — how it should work
 
+> **Full specification:** [BILLING.md](./BILLING.md) — Stripe Elements, user/admin/visitor flows, webhooks, implementation map.
+
 #### Plans (match marketing pricing)
 
 | Plan | Price | Sites | Scheduled scans | Link crawl | History | Reports |
@@ -321,8 +323,8 @@ Topbar “Profile Settings” → profile tab; “Account Settings” → billin
 2. **During trial** → Settings → Billing shows countdown + “Choose a plan”.
 3. **3 days before end** → email + in-app banner.
 4. **Trial expired** → `status = EXPIRED`; scans blocked; UpgradeModal on gated actions.
-5. **Subscribe** → pick plan → **Stripe Checkout** (subscription mode) → webhook activates plan.
-6. **Ongoing** → upgrade/downgrade via Checkout or Portal; cancel at period end.
+5. **Subscribe** → pick plan → **Stripe Elements** (embedded card form on billing page) → webhook activates plan.
+6. **Ongoing** → upgrade/downgrade in app; update card / invoices / cancel via **Stripe Customer Portal**.
 
 #### Upgrade modal (paywall)
 
@@ -520,9 +522,10 @@ Priority order for a shippable paid SaaS:
 
 ### Phase A — Monetization (critical)
 - [x] `Subscription` model + trial on register  
-- [ ] Stripe Checkout + Customer Portal + webhooks  
+- [ ] Stripe Elements subscribe flow + Customer Portal (see [BILLING.md](./BILLING.md))  
+- [ ] Stripe webhooks (`/api/webhooks/stripe`)  
 - [ ] `getEntitlements()` + server gates (sites, scans, features)  
-- [ ] Settings → Billing tab (Stripe checkout + portal)  
+- [ ] Settings → Billing tab (real subscription UI + Elements)  
 - [ ] `UpgradeModal` component (paywall dialog)  
 
 ### Phase B — Operations
@@ -575,6 +578,7 @@ Keep pricing copy aligned as billing and scheduling ship.
 | Auth | `src/actions/auth.ts`, `src/app/(auth)/` |
 | Admin | `src/app/admin/`, `src/actions/admin.ts`, `src/lib/admin-data.ts` |
 | Subscriptions | `src/lib/subscription.ts`, `src/lib/plans.ts` |
+| Billing (planned) | [BILLING.md](./BILLING.md) |
 | Email | `src/lib/email/` |
 | Schema | `prisma/schema.prisma` |
 

@@ -73,37 +73,110 @@ Reports are stored under `loopnode/reports/`; profile images under `loopnode/pro
 
 ---
 
-## 4. Trigger.dev (audits)
+## 4. Trigger.dev (audits) — read this carefully
 
-Audits use Puppeteer + Lighthouse. Vercel cannot run those reliably in a 10s function, so Trigger runs them in the background.
+Audits use Puppeteer + Lighthouse (30–90+ seconds). Vercel Hobby functions timeout at **~10 seconds**, so audits **cannot** run on Vercel. Trigger.dev runs them on its own infrastructure instead.
 
-### 4a. Create project
+### Local vs production — two different things
+
+| | **Local development** | **Production (Vercel)** |
+|---|------------------------|-------------------------|
+| Next.js app | `npm run dev` | Deployed on Vercel |
+| Who runs the audit? | `npm run dev:trigger` (local worker) | **Trigger.dev cloud** (after you deploy tasks) |
+| Command | `trigger dev` | `npx trigger.dev@latest deploy` (from your laptop) |
+| API key | Dev key (`tr_dev_...`) is fine | **Production** key (`tr_prod_...`) on Vercel |
+
+**Common mistake:** Adding Trigger env vars to Vercel and expecting audits to work. That only **queues** jobs. Vercel never runs `trigger dev` and never executes Lighthouse. You must **separately deploy tasks** to Trigger.dev.
+
+```
+User clicks "Run audit" on Vercel
+        ↓
+Vercel API queues task (tasks.trigger)     ← needs USE_TRIGGER_DEV=true + TRIGGER_SECRET_KEY
+        ↓
+Trigger.dev cloud runs run-audit task      ← needs npx trigger.dev deploy + DB env on Trigger
+        ↓
+Scan completes in Supabase
+```
+
+**Broken link scans are different** — they still run on Vercel API routes (`/api/broken-links/...`) and are **not** on Trigger yet. They may timeout on the free plan for large sites.
+
+### 4a. Create Trigger.dev project
 
 1. Sign up at [cloud.trigger.dev](https://cloud.trigger.dev).
-2. Create a project → copy **Project ref** (e.g. `proj_xxxx`) → `TRIGGER_PROJECT_REF`.
-3. **API Keys** → create a **Production** secret key → `TRIGGER_SECRET_KEY`.
+2. Create a project → **Settings** → copy **Project ref** (e.g. `proj_xxxx`) → `TRIGGER_PROJECT_REF`.
+3. **API Keys** → create a **Production** secret key (`tr_prod_...`) → use this on **Vercel**.
+4. (Optional) Create a **Development** key (`tr_dev_...`) for local `.env.local` only.
 
-### 4b. Deploy the worker (from your machine)
+### 4b. Deploy tasks to Trigger.dev (required — from your machine)
+
+This step is **not** part of the Vercel build. Run it on your laptop after cloning and whenever `src/trigger/` changes:
 
 ```bash
-# Login once
+# One-time login
 npx trigger.dev@latest login
 
-# Deploy tasks (run after code changes to src/trigger/)
+# Deploy tasks to Trigger.dev production
 npx trigger.dev@latest deploy
 ```
 
-`trigger.config.ts` loads env from `.env.local` for deploy. For production, also add the same variables in **Trigger.dev → Project → Environment variables** (see section 6).
+`trigger.config.ts` reads `.env.local` during deploy and bundles env into the worker. Task code lives in `src/trigger/run-audit.ts`.
 
-### 4c. App setting
+**Verify deploy succeeded:** Trigger.dev dashboard → **Deployments** should show a recent deployment.
 
-```env
-USE_TRIGGER_DEV="true"
-TRIGGER_SECRET_KEY="tr_prod_xxxxxxxx"
-TRIGGER_PROJECT_REF="proj_xxxxxxxx"
+### 4c. Environment variables on Trigger.dev (worker side)
+
+The worker runs on Trigger’s servers and needs database access. In **Trigger.dev → your project → Environment variables** (Production), set:
+
+| Variable | Required | Notes |
+|----------|----------|--------|
+| `DATABASE_URL` | Yes | Same Supabase pooler URL as Vercel |
+| `DIRECT_URL` | Yes | Same Supabase direct URL as Vercel |
+| `NEXT_PUBLIC_APP_URL` | Yes | `https://your-app.vercel.app` |
+
+Redeploy Trigger tasks after changing these:
+
+```bash
+npx trigger.dev@latest deploy
 ```
 
-When `USE_TRIGGER_DEV=true`, starting an audit queues `run-audit` on Trigger instead of running Lighthouse on Vercel.
+### 4d. Environment variables on Vercel (app side)
+
+Set in **Vercel → Project → Settings → Environment Variables** (Production):
+
+```env
+USE_TRIGGER_DEV=true
+TRIGGER_SECRET_KEY=tr_prod_xxxxxxxx
+TRIGGER_PROJECT_REF=proj_xxxxxxxx
+```
+
+| Variable | Value | Notes |
+|----------|--------|--------|
+| `USE_TRIGGER_DEV` | `true` | Must be exactly `true` — not `false` or empty |
+| `TRIGGER_SECRET_KEY` | `tr_prod_...` | **Production** key — dev keys won't work on Vercel |
+| `TRIGGER_PROJECT_REF` | `proj_xxxx` | From Trigger project settings |
+
+When `USE_TRIGGER_DEV=true`, starting an audit calls `tasks.trigger("run-audit", …)` instead of running Lighthouse on Vercel.
+
+### 4e. Local development (two terminals)
+
+```bash
+# Terminal 1 — Next.js
+npm run dev
+
+# Terminal 2 — Trigger dev worker (picks up queued tasks locally)
+npm run dev:trigger
+```
+
+Your `.env.local` can use a dev API key for local testing. Production Vercel must use the production key.
+
+### 4f. Production setup order (do in this order)
+
+1. Create Trigger.dev project + production API key.
+2. Add `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_APP_URL` in Trigger.dev env.
+3. Run `npx trigger.dev@latest login` then `npx trigger.dev@latest deploy`.
+4. Add `USE_TRIGGER_DEV`, `TRIGGER_SECRET_KEY`, `TRIGGER_PROJECT_REF` on Vercel.
+5. Deploy / redeploy Vercel.
+6. Run an audit on the live site → check **Trigger.dev → Runs** for a new run.
 
 ---
 
@@ -153,13 +226,19 @@ Set these in **Vercel → Project → Settings → Environment Variables** (Prod
 | `NEXT_PUBLIC_CLOUDINARY_API_KEY` | Yes | |
 | `CLOUDINARY_API_SECRET` | Yes | Server only |
 | `CLOUDINARY_UPLOAD_PRESET` | Yes | |
-| `USE_TRIGGER_DEV` | Yes | `true` on Vercel |
-| `TRIGGER_SECRET_KEY` | Yes | Production key from Trigger.dev |
-| `TRIGGER_PROJECT_REF` | Yes | |
+| `USE_TRIGGER_DEV` | Yes | `true` on Vercel (exact string) |
+| `TRIGGER_SECRET_KEY` | Yes | **Production** key (`tr_prod_...`) — not dev key |
+| `TRIGGER_PROJECT_REF` | Yes | e.g. `proj_xxxx` |
 | `NODE_ENV` | Auto | Vercel sets `production` |
 | `SKIP_CHROME_DOWNLOAD` | Recommended | `1` — skip Puppeteer Chrome download on Vercel build |
 
-Mirror the Trigger-related vars (+ `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_APP_URL`) in **Trigger.dev → Environment variables** for the production environment.
+Mirror **database and app URL** vars in **Trigger.dev → Environment variables** (Production):
+
+- `DATABASE_URL`
+- `DIRECT_URL`
+- `NEXT_PUBLIC_APP_URL`
+
+Then run `npx trigger.dev@latest deploy` so the worker picks them up.
 
 ---
 
@@ -202,11 +281,14 @@ After deploy, copy the production URL and **update** `AUTH_URL` and `NEXT_PUBLIC
 ## 8. Post-deploy checklist
 
 - [ ] `npx prisma db push` ran against production Supabase
-- [ ] `npx trigger.dev@latest deploy` succeeded
+- [ ] **`npx trigger.dev@latest deploy` succeeded** (not optional — Vercel alone cannot run audits)
+- [ ] Trigger.dev dashboard → **Deployments** shows your task bundle
+- [ ] Trigger.dev → **Environment variables** has `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_APP_URL`
+- [ ] Vercel has `USE_TRIGGER_DEV=true` and **production** `TRIGGER_SECRET_KEY` (`tr_prod_...`)
 - [ ] `AUTH_URL` / `NEXT_PUBLIC_APP_URL` match live URL
 - [ ] Cloudinary PDF delivery enabled
 - [ ] Register a test user → confirm email (SMTP)
-- [ ] Connect a website → **Run audit** → scan completes via Trigger (check Trigger.dev runs dashboard)
+- [ ] Connect a website → **Run audit** → **Trigger.dev → Runs** shows a completed run (not stuck on Vercel)
 - [ ] Generate a report → save to library → preview / download works
 - [ ] Upload profile photo in Settings
 
@@ -217,9 +299,10 @@ After deploy, copy the production URL and **update** `AUTH_URL` and `NEXT_PUBLIC
 | Change | Action |
 |--------|--------|
 | App / UI / API code | `git push` → Vercel auto-deploys |
-| `src/trigger/*` tasks | `npx trigger.dev@latest deploy` |
+| `src/trigger/*` tasks | `npx trigger.dev@latest deploy` (Vercel redeploy is **not** enough) |
 | Prisma schema | `npx prisma db push` locally, then redeploy Vercel |
-| New env var | Add in Vercel + Trigger.dev, redeploy both |
+| New env var on Vercel | Redeploy Vercel |
+| New env var on Trigger worker | Update Trigger.dev env, then `npx trigger.dev@latest deploy` |
 
 ---
 
@@ -239,17 +322,23 @@ After deploy, copy the production URL and **update** `AUTH_URL` and `NEXT_PUBLIC
 - All required vars from section 6 must be set in Vercel before build.
 - Use `npx prisma generate && next build` as the build command.
 
-### `Invalid environment variables` on deploy
+### Audits stuck on “Running” (Trigger.dev)
+
+Work through this list in order:
+
+1. **`npx trigger.dev@latest deploy`** — most common fix. Env vars on Vercel alone do not deploy the worker.
+2. **`USE_TRIGGER_DEV=true`** on Vercel (exact value, then redeploy).
+3. **`TRIGGER_SECRET_KEY`** must be a **production** key (`tr_prod_...`), not `tr_dev_...`.
+4. Open **Trigger.dev → Runs** after starting an audit:
+   - **No runs appear** → Vercel is not queuing (check keys + `USE_TRIGGER_DEV`).
+   - **Runs appear but fail** → open the run log; usually missing `DATABASE_URL` / `DIRECT_URL` on Trigger.dev.
+5. Trigger.dev → **Environment variables** (Production) must include `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_APP_URL`.
+6. After fixing Trigger env, run `npx trigger.dev@latest deploy` again.
+
+### `Invalid environment variables` on Vercel build
 
 - `USE_TRIGGER_DEV=true` requires `TRIGGER_SECRET_KEY`.
-- Every key in `.env.example` marked required must be present.
-
-### Audits stuck on “Running”
-
-- Confirm `USE_TRIGGER_DEV=true` on Vercel.
-- Confirm `npx trigger.dev@latest deploy` was run.
-- Open Trigger.dev dashboard → **Runs** → check errors.
-- Ensure Trigger env has `DATABASE_URL` and `DIRECT_URL`.
+- Every required key from section 6 must be present on Vercel before build.
 
 ### Auth redirect / session issues
 
@@ -283,10 +372,10 @@ npx prisma generate && npm run build
 npx prisma db push
 npx prisma studio
 
-# Trigger.dev
+# Trigger.dev (production worker — run from your machine, NOT on Vercel)
 npx trigger.dev@latest login
-npx trigger.dev@latest deploy
-npx trigger.dev@latest dev    # local worker (with npm run dev)
+npx trigger.dev@latest deploy          # required after src/trigger/ changes
+npm run dev:trigger                    # local only: pairs with npm run dev
 
 # Vercel CLI (optional)
 npx vercel login
@@ -306,3 +395,21 @@ npx vercel --prod
 | Gmail SMTP | Free with app password |
 
 You can run LoopNode end-to-end on $0/month within those limits; upgrade when traffic or scan volume grows.
+
+---
+
+## 13. Stripe billing (when implemented)
+
+Full payment flows, Stripe Elements setup, webhooks, admin billing, and user/non-user journeys are documented in **[BILLING.md](./BILLING.md)**.
+
+Quick summary for production env (add when Phase A ships):
+
+| Variable | Notes |
+|----------|--------|
+| `STRIPE_SECRET_KEY` | Server only |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Client Elements |
+| `STRIPE_WEBHOOK_SECRET` | `/api/webhooks/stripe` |
+| `STRIPE_PRICE_STARTER` / `_PRO` / `_AGENCY` | Stripe Price IDs |
+
+Webhook URL: `https://your-app.vercel.app/api/webhooks/stripe`
+
