@@ -13,6 +13,27 @@ CREATE TYPE "IssueSeverity" AS ENUM ('CRITICAL', 'MAJOR', 'MINOR', 'INFO');
 -- CreateEnum
 CREATE TYPE "IssueCategory" AS ENUM ('PERFORMANCE', 'ACCESSIBILITY', 'SEO', 'SECURITY', 'BROKEN_LINKS');
 
+-- CreateEnum
+CREATE TYPE "IssueStatus" AS ENUM ('OPEN', 'ACKNOWLEDGED', 'RESOLVED');
+
+-- CreateEnum
+CREATE TYPE "BrokenLinkScanMode" AS ENUM ('INTERNAL', 'EXTERNAL');
+
+-- CreateEnum
+CREATE TYPE "BrokenLinkScanStatus" AS ENUM ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "ReportType" AS ENUM ('FULL_AUDIT', 'EXECUTIVE_SUMMARY', 'ISSUES_CSV');
+
+-- CreateEnum
+CREATE TYPE "SubscriptionStatus" AS ENUM ('TRIALING', 'ACTIVE', 'PAST_DUE', 'CANCELLED', 'EXPIRED');
+
+-- CreateEnum
+CREATE TYPE "PlanTier" AS ENUM ('STARTER', 'PRO', 'AGENCY');
+
+-- CreateEnum
+CREATE TYPE "ContactMessageStatus" AS ENUM ('NEW', 'READ', 'ARCHIVED');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -134,15 +155,62 @@ CREATE TABLE "issues" (
     "scanId" TEXT NOT NULL,
     "category" "IssueCategory" NOT NULL,
     "severity" "IssueSeverity" NOT NULL,
+    "status" "IssueStatus" NOT NULL DEFAULT 'OPEN',
+    "fingerprint" TEXT NOT NULL DEFAULT '',
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "selector" TEXT,
     "url" TEXT,
     "recommendation" TEXT,
     "metadata" JSONB,
+    "acknowledgedAt" TIMESTAMP(3),
+    "resolvedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "issues_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "broken_link_scans" (
+    "id" TEXT NOT NULL,
+    "websiteId" TEXT NOT NULL,
+    "status" "BrokenLinkScanStatus" NOT NULL DEFAULT 'PENDING',
+    "mode" "BrokenLinkScanMode" NOT NULL,
+    "phase" TEXT,
+    "statusMessage" TEXT,
+    "pagesDiscovered" INTEGER NOT NULL DEFAULT 0,
+    "pagesCrawled" INTEGER NOT NULL DEFAULT 0,
+    "linksFound" INTEGER NOT NULL DEFAULT 0,
+    "linksChecked" INTEGER NOT NULL DEFAULT 0,
+    "brokenCount" INTEGER NOT NULL DEFAULT 0,
+    "progressPercent" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "startedAt" TIMESTAMP(3),
+    "completedAt" TIMESTAMP(3),
+    "errorMessage" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "broken_link_scans_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "broken_link_results" (
+    "id" TEXT NOT NULL,
+    "scanId" TEXT NOT NULL,
+    "href" TEXT NOT NULL,
+    "sourcePageUrl" TEXT NOT NULL,
+    "statusCode" INTEGER,
+    "errorMessage" TEXT,
+    "elementTag" TEXT,
+    "elementId" TEXT,
+    "elementClass" TEXT,
+    "elementText" TEXT,
+    "selector" TEXT,
+    "attribute" TEXT,
+    "severity" "IssueSeverity" NOT NULL DEFAULT 'MAJOR',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "broken_link_results_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -150,8 +218,11 @@ CREATE TABLE "reports" (
     "id" TEXT NOT NULL,
     "websiteId" TEXT NOT NULL,
     "scanId" TEXT,
+    "type" "ReportType" NOT NULL DEFAULT 'FULL_AUDIT',
+    "format" TEXT NOT NULL DEFAULT 'pdf',
     "title" TEXT NOT NULL,
     "fileUrl" TEXT NOT NULL,
+    "cloudinaryPublicId" TEXT,
     "fileSize" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -166,6 +237,38 @@ CREATE TABLE "newsletter_subscribers" (
     "unsubscribedAt" TIMESTAMP(3),
 
     CONSTRAINT "newsletter_subscribers_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "subscriptions" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "plan" "PlanTier",
+    "status" "SubscriptionStatus" NOT NULL DEFAULT 'TRIALING',
+    "trialEndsAt" TIMESTAMP(3),
+    "stripeCustomerId" TEXT,
+    "stripeSubscriptionId" TEXT,
+    "currentPeriodEnd" TIMESTAMP(3),
+    "cancelAtPeriodEnd" BOOLEAN NOT NULL DEFAULT false,
+    "adminNotes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "subscriptions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "contact_messages" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "subject" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "status" "ContactMessageStatus" NOT NULL DEFAULT 'NEW',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "readAt" TIMESTAMP(3),
+
+    CONSTRAINT "contact_messages_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -240,13 +343,58 @@ CREATE INDEX "issues_category_idx" ON "issues"("category");
 CREATE INDEX "issues_severity_idx" ON "issues"("severity");
 
 -- CreateIndex
+CREATE INDEX "issues_status_idx" ON "issues"("status");
+
+-- CreateIndex
+CREATE INDEX "issues_fingerprint_idx" ON "issues"("fingerprint");
+
+-- CreateIndex
+CREATE INDEX "broken_link_scans_websiteId_idx" ON "broken_link_scans"("websiteId");
+
+-- CreateIndex
+CREATE INDEX "broken_link_scans_status_idx" ON "broken_link_scans"("status");
+
+-- CreateIndex
+CREATE INDEX "broken_link_scans_createdAt_idx" ON "broken_link_scans"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "broken_link_results_scanId_idx" ON "broken_link_results"("scanId");
+
+-- CreateIndex
 CREATE INDEX "reports_websiteId_idx" ON "reports"("websiteId");
+
+-- CreateIndex
+CREATE INDEX "reports_type_idx" ON "reports"("type");
+
+-- CreateIndex
+CREATE INDEX "reports_createdAt_idx" ON "reports"("createdAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "newsletter_subscribers_email_key" ON "newsletter_subscribers"("email");
 
 -- CreateIndex
 CREATE INDEX "newsletter_subscribers_email_idx" ON "newsletter_subscribers"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "subscriptions_userId_key" ON "subscriptions"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "subscriptions_stripeCustomerId_key" ON "subscriptions"("stripeCustomerId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "subscriptions_stripeSubscriptionId_key" ON "subscriptions"("stripeSubscriptionId");
+
+-- CreateIndex
+CREATE INDEX "subscriptions_status_idx" ON "subscriptions"("status");
+
+-- CreateIndex
+CREATE INDEX "subscriptions_plan_idx" ON "subscriptions"("plan");
+
+-- CreateIndex
+CREATE INDEX "contact_messages_status_idx" ON "contact_messages"("status");
+
+-- CreateIndex
+CREATE INDEX "contact_messages_createdAt_idx" ON "contact_messages"("createdAt");
 
 -- CreateIndex
 CREATE INDEX "activity_logs_userId_idx" ON "activity_logs"("userId");
@@ -270,7 +418,16 @@ ALTER TABLE "scans" ADD CONSTRAINT "scans_websiteId_fkey" FOREIGN KEY ("websiteI
 ALTER TABLE "issues" ADD CONSTRAINT "issues_scanId_fkey" FOREIGN KEY ("scanId") REFERENCES "scans"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "broken_link_scans" ADD CONSTRAINT "broken_link_scans_websiteId_fkey" FOREIGN KEY ("websiteId") REFERENCES "websites"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "broken_link_results" ADD CONSTRAINT "broken_link_results_scanId_fkey" FOREIGN KEY ("scanId") REFERENCES "broken_link_scans"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "reports" ADD CONSTRAINT "reports_websiteId_fkey" FOREIGN KEY ("websiteId") REFERENCES "websites"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
