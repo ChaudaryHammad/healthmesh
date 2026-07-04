@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ReliableLink } from "@/components/ui/reliable-link";
 import type { ComponentProps } from "react";
 import { Button, type buttonVariants } from "@/components/ui/button";
 import type { VariantProps } from "class-variance-authority";
@@ -10,7 +10,7 @@ type ButtonLinkProps = VariantProps<typeof buttonVariants> &
 
 export function ButtonLink({ href, children, ...props }: ButtonLinkProps) {
   return (
-    <Button render={<Link href={href} />} nativeButton={false} {...props}>
+    <Button render={<ReliableLink href={href} />} nativeButton={false} {...props}>
       {children}
     </Button>
   );

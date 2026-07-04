@@ -1,5 +1,7 @@
 "use server";
 
+import { unstable_noStore as noStore } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateBrokenLinksPdf } from "@/lib/reports/generate-broken-links-pdf";
@@ -78,6 +80,7 @@ export async function startBrokenLinkScanAction(
 }
 
 export async function getBrokenLinkScanStatusAction(scanId: string) {
+  noStore();
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized." };
@@ -137,10 +140,13 @@ export async function cancelBrokenLinkScanAction(scanId: string) {
     data: {
       status: "FAILED",
       phase: "cancelled",
-      statusMessage: "Halting scan…",
+      statusMessage: "Scan stopped",
       errorMessage: "Halted by user",
+      completedAt: new Date(),
     },
   });
+
+  revalidatePath(`/dashboard/websites/${scan.websiteId}`);
 
   return { success: true };
 }

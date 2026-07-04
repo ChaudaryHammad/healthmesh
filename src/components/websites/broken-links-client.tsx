@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { ReliableLink } from "@/components/ui/reliable-link";
 import {
   ArrowLeft,
   Copy,
@@ -356,9 +356,10 @@ export function BrokenLinksClient({
   );
 
   const overviewHref = `/dashboard/websites/${websiteId}`;
-  const isRunning = activeScan?.status === "RUNNING" || activeScan?.status === "PENDING";
+  const isRunning =
+    activeScan?.status === "RUNNING" || activeScan?.status === "PENDING";
   const isScanning = isRunning || isStarting;
-  const showProgress = isScanning || activeScan?.status === "RUNNING";
+  const showProgress = isScanning;
 
   const pollScan = useCallback(async (scanId: string) => {
     const res = await getBrokenLinkScanStatusAction(scanId);
@@ -440,7 +441,11 @@ export function BrokenLinksClient({
           await pollScan(scanId);
         })
         .catch(() => setError("Lost connection. Refresh and try again."))
-        .finally(() => setPollingId(null));
+        .finally(async () => {
+          await pollScan(scanId);
+          setPollingId(null);
+          setIsStarting(false);
+        });
     } catch {
       setError("Something went wrong starting the scan.");
       setActiveScan(initialScan);
@@ -452,17 +457,37 @@ export function BrokenLinksClient({
 
   const handleHaltScan = async () => {
     if (!activeScan || activeScan.id === "pending") return;
+    const scanId = activeScan.id;
     setIsHalting(true);
     setError(null);
+
+    // Optimistic UI — don't wait on poll/refresh if the server action succeeds.
+    setActiveScan((prev) =>
+      prev
+        ? {
+            ...prev,
+            status: "FAILED",
+            phase: "cancelled",
+            statusMessage: "Scan stopped",
+            errorMessage: "Halted by user",
+            completedAt: new Date().toISOString(),
+          }
+        : prev
+    );
+    setPollingId(null);
+    setIsStarting(false);
+
     try {
-      const res = await cancelBrokenLinkScanAction(activeScan.id);
-      if (!res.success) setError(res.error ?? "Failed to stop scan.");
-      else {
-        await pollScan(activeScan.id);
-        setPollingId(null);
+      const res = await cancelBrokenLinkScanAction(scanId);
+      if (!res.success) {
+        setError(res.error ?? "Failed to stop scan.");
+        await pollScan(scanId);
+        return;
       }
+      await pollScan(scanId);
     } catch {
       setError("Something went wrong stopping the scan.");
+      await pollScan(scanId);
     } finally {
       setIsHalting(false);
     }
@@ -606,11 +631,11 @@ export function BrokenLinksClient({
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Button variant="link" size="sm" className="h-auto p-0" render={<Link href="/dashboard/websites" />} nativeButton={false}>
+        <Button variant="link" size="sm" className="h-auto p-0" render={<ReliableLink href="/dashboard/websites" />} nativeButton={false}>
           Websites
         </Button>
         <span>/</span>
-        <Button variant="link" size="sm" className="h-auto p-0" render={<Link href={overviewHref} />} nativeButton={false}>
+        <Button variant="link" size="sm" className="h-auto p-0" render={<ReliableLink href={overviewHref} />} nativeButton={false}>
           {websiteName}
         </Button>
         <span>/</span>
@@ -670,7 +695,7 @@ export function BrokenLinksClient({
           </div>
         </CardContent>
 
-        {showProgress && activeScan?.status === "RUNNING" ? (
+        {showProgress && activeScan ? (
           <div className="border-t border-border/30 bg-secondary/5 px-6 md:px-8 py-5 space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="space-y-1 min-w-0 flex-1">

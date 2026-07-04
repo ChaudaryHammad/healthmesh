@@ -2,6 +2,7 @@ import { config } from "dotenv";
 import { defineConfig } from "@trigger.dev/sdk";
 import { additionalFiles } from "@trigger.dev/build/extensions/core";
 import { puppeteer } from "@trigger.dev/build/extensions/puppeteer";
+import { lighthouseLocalesExtension } from "./src/trigger/build/lighthouse-locales-extension";
 
 config({ path: ".env.local" });
 config({ path: ".env" });
@@ -47,6 +48,7 @@ export default defineConfig({
   build: {
     extensions: [
       puppeteer(),
+      lighthouseLocalesExtension(),
       additionalFiles({ files: ["node_modules/axe-core/axe.min.js"] }),
     ],
   },

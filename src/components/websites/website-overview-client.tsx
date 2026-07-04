@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import { ReliableLink } from "@/components/ui/reliable-link";
 import {
   Globe,
   Zap,
@@ -152,8 +152,13 @@ function StatusBadge({ status }: { status: string }) {
       className: "bg-amber-500/10 border-amber-500/25 text-amber-400",
       icon: <Clock className="w-3 h-3" />,
     },
+    NOT_AUDITED: {
+      label: "Not audited",
+      className: "bg-secondary/40 border-border/30 text-muted-foreground",
+      icon: <Clock className="w-3 h-3" />,
+    },
   };
-  const cfg = map[status] ?? map.PENDING;
+  const cfg = map[status] ?? map.NOT_AUDITED;
   return (
     <Badge variant="outline" className={cn("text-[11px]", cfg.className)}>
       {cfg.icon} {cfg.label}
@@ -261,6 +266,16 @@ export function WebsiteOverviewClient({
   });
 
   const displayScan = (completedScan ?? latestCompleted) as SerializedScan | null;
+  const latestScan = scans[0] ?? null;
+
+  const headerStatus = isRunning
+    ? "RUNNING"
+    : displayScan?.status ??
+      (latestScan?.status === "FAILED"
+        ? "FAILED"
+        : latestScan?.status === "PENDING"
+          ? "PENDING"
+          : "NOT_AUDITED");
 
   const host = website.url.replace(/^https?:\/\//, "").split("/")[0];
   const checkerHref = `/dashboard/websites/${website.id}/broken-links`;
@@ -270,13 +285,13 @@ export function WebsiteOverviewClient({
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between gap-4">
-        <Link
+        <ReliableLink
           href="/dashboard/websites"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Websites
-        </Link>
+        </ReliableLink>
         <ButtonLink href={settingsHref} variant="outline" size="sm">
           <Settings className="w-4 h-4" />
           Settings
@@ -296,9 +311,7 @@ export function WebsiteOverviewClient({
                   <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
                     {website.name}
                   </h1>
-                  <StatusBadge
-                    status={isRunning ? "RUNNING" : displayScan?.status ?? "PENDING"}
-                  />
+                  <StatusBadge status={headerStatus} />
                 </div>
                 <a
                   href={website.url}
@@ -472,7 +485,7 @@ export function WebsiteOverviewClient({
                     ? (displayScan[page.scoreKey] as number | null)
                     : null;
                 return (
-                  <Link
+                  <ReliableLink
                     key={page.key}
                     href={page.href(website.id)}
                     className="group flex items-center justify-between gap-3 rounded-xl border border-border/30 bg-secondary/5 px-4 py-3.5 hover:bg-secondary/15 hover:border-border/50 transition-colors"
@@ -493,7 +506,7 @@ export function WebsiteOverviewClient({
                       </div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                  </Link>
+                  </ReliableLink>
                 );
               })}
             </div>
@@ -576,20 +589,20 @@ export function WebsiteOverviewClient({
             )}
 
             <div className="grid grid-cols-1 gap-2">
-              <Link
+              <ReliableLink
                 href={checkerHref}
                 className="flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-secondary/5 px-3 py-2.5 text-sm font-medium hover:bg-secondary/15 transition-colors"
               >
                 <Globe className="w-4 h-4 text-muted-foreground" />
                 Internal crawl
-              </Link>
-              <Link
+              </ReliableLink>
+              <ReliableLink
                 href={checkerHref}
                 className="flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-secondary/5 px-3 py-2.5 text-sm font-medium hover:bg-secondary/15 transition-colors"
               >
                 <ExternalLink className="w-4 h-4 text-muted-foreground" />
                 External check
-              </Link>
+              </ReliableLink>
             </div>
           </section>
 

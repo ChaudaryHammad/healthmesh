@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   cancelScanAction,
@@ -51,6 +51,7 @@ export function useAuditScan({
   initialProgress,
 }: UseAuditScanOptions) {
   const router = useRouter();
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pollingId, setPollingId] = useState<string | null>(initialRunningScanId ?? null);
   const [isStarting, setIsStarting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -59,6 +60,29 @@ export function useAuditScan({
   const [progress, setProgress] = useState<AuditProgressState>(
     initialProgress ?? EMPTY_PROGRESS
   );
+
+  const scheduleRefresh = useCallback(() => {
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = setTimeout(() => {
+      router.refresh();
+    }, 500);
+  }, [router]);
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    };
+  }, []);
+
+  // Keep polling in sync when the server page revalidates (e.g. after cancel).
+  useEffect(() => {
+    if (initialRunningScanId) {
+      setPollingId(initialRunningScanId);
+      if (initialProgress) setProgress(initialProgress);
+    } else if (!isStarting) {
+      setPollingId(null);
+    }
+  }, [initialRunningScanId, initialProgress, isStarting]);
 
   const pollScan = useCallback(async (scanId: string) => {
     const res = await getScanStatusAction(scanId);
@@ -99,8 +123,8 @@ export function useAuditScan({
   const finishPolling = useCallback(() => {
     setPollingId(null);
     setIsStarting(false);
-    router.refresh();
-  }, [router]);
+    scheduleRefresh();
+  }, [scheduleRefresh]);
 
   useEffect(() => {
     if (!pollingId) return;
@@ -143,7 +167,7 @@ export function useAuditScan({
 
       const scanId = res.data.scanId;
       setPollingId(scanId);
-      router.refresh();
+      setIsStarting(false);
 
       void fetch(`/api/audits/${scanId}/execute`, { method: "POST" })
         .then(async (response) => {
@@ -166,7 +190,7 @@ export function useAuditScan({
       setError("Something went wrong starting the audit.");
       setIsStarting(false);
     }
-  }, [websiteId, router, pollScan]);
+  }, [websiteId, pollScan]);
 
   const cancelScan = useCallback(async () => {
     const scanId = pollingId ?? initialRunningScanId;
@@ -181,6 +205,12 @@ export function useAuditScan({
         setError(res.error ?? "Failed to stop audit.");
         return;
       }
+      setProgress({
+        phase: "failed",
+        statusMessage: "Audit stopped.",
+        progressPercent: 0,
+        startedAt: null,
+      });
       finishPolling();
     } catch (err) {
       console.error(err);
