@@ -1,7 +1,7 @@
 import type { Browser, Page } from "puppeteer";
-import lighthouse from "lighthouse";
 import type { ScanIssueInput } from "./types";
 import { lighthouseSubstepMessage } from "./audit-phases";
+import { ensureLighthouseLocales } from "./lighthouse-locales";
 
 export interface PerformanceAuditResult {
   score: number;
@@ -168,6 +168,9 @@ export async function runLighthousePerformanceAudit(
   };
 
   logLighthouse("Initializing Lighthouse");
+
+  ensureLighthouseLocales();
+  const lighthouse = (await import("lighthouse")).default;
 
   const runnerResult = await lighthouse(
     url,

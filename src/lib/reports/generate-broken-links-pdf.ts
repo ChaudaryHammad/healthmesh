@@ -1,5 +1,4 @@
-import { htmlToPdfBuffer } from "@/lib/reports/html-to-pdf";
-import { renderBrokenLinksHtml } from "@/lib/reports/render-broken-links-html";
+import { buildBrokenLinksPdfBuffer } from "@/lib/reports/pdf/broken-links-document";
 import type { LinkResourceType } from "@/lib/scanner/link-resource-types";
 
 export type BrokenLinkFinding = {
@@ -29,5 +28,5 @@ export type BrokenLinksReportInput = {
 };
 
 export async function generateBrokenLinksPdf(input: BrokenLinksReportInput) {
-  return htmlToPdfBuffer(renderBrokenLinksHtml(input));
+  return buildBrokenLinksPdfBuffer(input);
 }

@@ -15,6 +15,10 @@ const LAUNCH_ARGS = [
   "--remote-debugging-port=0",
 ];
 
+function isServerlessPlatform(): boolean {
+  return Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+}
+
 function systemChromePaths(): string[] {
   const paths: string[] = [];
 
@@ -61,7 +65,32 @@ async function resolveExecutablePath(): Promise<string | undefined> {
   return systemChromePaths().find((p) => existsSync(p));
 }
 
+async function launchServerlessBrowser(): Promise<Browser> {
+  const chromium = await import("@sparticuz/chromium");
+  const puppeteerCore = await import("puppeteer-core");
+
+  chromium.default.setGraphicsMode = false;
+
+  return (await puppeteerCore.default.launch({
+    args: chromium.default.args,
+    executablePath: await chromium.default.executablePath(),
+    headless: true,
+    timeout: 45000,
+  })) as unknown as Browser;
+}
+
 export async function launchBrowser(): Promise<Browser> {
+  if (isServerlessPlatform()) {
+    try {
+      return await launchServerlessBrowser();
+    } catch (error) {
+      throw new Error(
+        "Could not launch headless Chrome on the server. PDF generation and audits require a serverless Chromium runtime." +
+          (error instanceof Error ? `\n\n${error.message}` : "")
+      );
+    }
+  }
+
   const baseOptions: LaunchOptions = {
     headless: true,
     args: LAUNCH_ARGS,

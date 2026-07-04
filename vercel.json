@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "src/app/api/broken-links/pdf/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

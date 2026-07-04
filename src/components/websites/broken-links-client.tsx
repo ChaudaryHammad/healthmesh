@@ -24,7 +24,6 @@ import {
   startBrokenLinkScanAction,
   getBrokenLinkScanStatusAction,
   cancelBrokenLinkScanAction,
-  generateBrokenLinksPdfAction,
 } from "@/actions/broken-links";
 import { formatDateTime, formatNumber, cn } from "@/lib/utils";
 import type { BrokenLinkScanMode } from "@prisma/client";
@@ -327,13 +326,10 @@ function serializeScan(scan: {
   };
 }
 
-function base64ToBlob(base64: string, mimeType: string) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return new Blob([bytes], { type: mimeType });
+function parsePdfFilename(contentDisposition: string | null): string | null {
+  if (!contentDisposition) return null;
+  const match = /filename="([^"]+)"/i.exec(contentDisposition);
+  return match?.[1] ?? null;
 }
 
 export function BrokenLinksClient({
@@ -481,36 +477,59 @@ export function BrokenLinksClient({
     setPdfLoadingAction(action);
     setError(null);
     try {
-      const res = await generateBrokenLinksPdfAction({
-        websiteId,
-        websiteName,
-        websiteUrl,
-        mode: activeScan.mode,
-        resourceTypes: activeScan.resourceTypes,
-        completedAt: activeScan.completedAt,
-        pagesCrawled: activeScan.pagesCrawled,
-        linksChecked: activeScan.linksChecked,
-        brokenCount: activeScan.brokenCount,
-        findings: liveResults.map((result) => ({
-          href: result.href,
-          sourcePageUrl: result.sourcePageUrl,
-          statusCode: result.statusCode,
-          errorMessage: result.errorMessage,
-          elementTag: result.elementTag,
-          elementId: result.elementId,
-          elementClass: result.elementClass,
-          elementText: result.elementText,
-          selector: result.selector,
-          attribute: result.attribute,
-          severity: result.severity,
-        })),
-      });
-      if (!res.success || !res.data) throw new Error(res.error ?? "Failed to generate PDF.");
-      const blob = base64ToBlob(res.data.fileBase64, "application/pdf");
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55000);
+
+      const response = await fetch("/api/broken-links/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          websiteId,
+          websiteName,
+          websiteUrl,
+          mode: activeScan.mode,
+          resourceTypes: activeScan.resourceTypes,
+          completedAt: activeScan.completedAt,
+          pagesCrawled: activeScan.pagesCrawled,
+          linksChecked: activeScan.linksChecked,
+          brokenCount: activeScan.brokenCount,
+          findings: liveResults.map((result) => ({
+            href: result.href,
+            sourcePageUrl: result.sourcePageUrl,
+            statusCode: result.statusCode,
+            errorMessage: result.errorMessage,
+            elementTag: result.elementTag,
+            elementId: result.elementId,
+            elementClass: result.elementClass,
+            elementText: result.elementText,
+            selector: result.selector,
+            attribute: result.attribute,
+            severity: result.severity,
+          })),
+        }),
+      }).finally(() => clearTimeout(timeout));
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Failed to generate PDF."
+        );
+      }
+
+      const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
+      const filename =
+        parsePdfFilename(response.headers.get("Content-Disposition")) ??
+        `broken-links-${websiteName.replace(/[<>:"/\\|?*]/g, "-").slice(0, 60)}.pdf`;
       setPdfBlobUrl(blobUrl);
-      setPdfFilename(res.data.filename);
-      return { blobUrl, filename: res.data.filename };
+      setPdfFilename(filename);
+      return { blobUrl, filename };
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new Error("PDF generation timed out. Try again in a moment.");
+      }
+      throw err;
     } finally {
       setPdfLoadingAction(null);
     }

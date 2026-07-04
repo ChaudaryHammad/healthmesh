@@ -243,7 +243,6 @@ export function WebsiteOverviewClient({
 }: WebsiteOverviewClientProps) {
   const serverRunningScan = scans.find((scan) => scan.status === "RUNNING") ?? null;
   const latestCompleted = scans.find((scan) => scan.status === "COMPLETED") ?? null;
-  const displayScan = latestCompleted;
 
   const initialProgress = serverRunningScan
     ? {
@@ -254,11 +253,14 @@ export function WebsiteOverviewClient({
       }
     : null;
 
-  const { startScan, cancelScan, isRunning, isCancelling, error, progress } = useAuditScan({
+  const { startScan, cancelScan, isRunning, isCancelling, error, progress, completedScan } =
+    useAuditScan({
     websiteId: website.id,
     initialRunningScanId: serverRunningScan?.id ?? null,
     initialProgress,
   });
+
+  const displayScan = (completedScan ?? latestCompleted) as SerializedScan | null;
 
   const host = website.url.replace(/^https?:\/\//, "").split("/")[0];
   const checkerHref = `/dashboard/websites/${website.id}/broken-links`;

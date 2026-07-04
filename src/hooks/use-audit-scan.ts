@@ -9,6 +9,25 @@ import {
 } from "@/actions/scans";
 import type { AuditProgressState } from "@/components/websites/audit-progress-panel";
 
+export interface CompletedScanSnapshot {
+  id: string;
+  status: string;
+  overallScore: number | null;
+  performanceScore: number | null;
+  accessibilityScore: number | null;
+  seoScore: number | null;
+  securityScore: number | null;
+  fcp: number | null;
+  lcp: number | null;
+  cls: number | null;
+  inp: number | null;
+  tbt: number | null;
+  completedAt: Date | string | null;
+  createdAt: Date | string;
+  issueCount: number;
+  criticalCount: number;
+}
+
 interface UseAuditScanOptions {
   websiteId: string;
   initialRunningScanId?: string | null;
@@ -22,6 +41,10 @@ const EMPTY_PROGRESS: AuditProgressState = {
   startedAt: null,
 };
 
+function isTerminalStatus(status: string): boolean {
+  return status === "COMPLETED" || status === "FAILED";
+}
+
 export function useAuditScan({
   websiteId,
   initialRunningScanId,
@@ -32,6 +55,7 @@ export function useAuditScan({
   const [isStarting, setIsStarting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completedScan, setCompletedScan] = useState<CompletedScanSnapshot | null>(null);
   const [progress, setProgress] = useState<AuditProgressState>(
     initialProgress ?? EMPTY_PROGRESS
   );
@@ -45,6 +69,28 @@ export function useAuditScan({
         progressPercent: res.data.progressPercent ?? 0,
         startedAt: res.data.startedAt,
       });
+
+      if (res.data.status === "COMPLETED") {
+        setCompletedScan({
+          id: res.data.id,
+          status: res.data.status,
+          overallScore: res.data.overallScore,
+          performanceScore: res.data.performanceScore,
+          accessibilityScore: res.data.accessibilityScore,
+          seoScore: res.data.seoScore,
+          securityScore: res.data.securityScore,
+          fcp: res.data.fcp,
+          lcp: res.data.lcp,
+          cls: res.data.cls,
+          inp: res.data.inp,
+          tbt: res.data.tbt,
+          completedAt: res.data.completedAt,
+          createdAt: res.data.createdAt,
+          issueCount: res.data.issueCount,
+          criticalCount: res.data.criticalCount,
+        });
+      }
+
       return res.data.status;
     }
     return "FAILED";
@@ -63,7 +109,7 @@ export function useAuditScan({
 
     const interval = setInterval(async () => {
       const status = await pollScan(pollingId);
-      if (status === "COMPLETED" || status === "FAILED") {
+      if (isTerminalStatus(status)) {
         finishPolling();
       }
     }, 1500);
@@ -74,6 +120,7 @@ export function useAuditScan({
   const startScan = useCallback(async () => {
     setError(null);
     setIsStarting(true);
+    setCompletedScan(null);
     setProgress(EMPTY_PROGRESS);
 
     try {
@@ -153,5 +200,6 @@ export function useAuditScan({
     error,
     pollingId,
     progress,
+    completedScan,
   };
 }

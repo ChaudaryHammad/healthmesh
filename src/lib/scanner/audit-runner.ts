@@ -1,8 +1,4 @@
 import { launchBrowser } from "./launch-browser";
-import { runPerformanceAuditWithFallback } from "./lighthouse-runner";
-import { runAccessibilityAudit } from "./accessibility-runner";
-import { runSeoAudit } from "./seo-runner";
-import { runSecurityAudit } from "./security-runner";
 import { configureAuditPage } from "./page-request-policy";
 import {
   assertScanRunnable,
@@ -93,6 +89,18 @@ export async function runFullAudit(
   const { scanId, onProgressSubstep } = options;
 
   console.log(`[audit] Starting full audit for ${normalizedUrl}`);
+
+  const [
+    { runPerformanceAuditWithFallback },
+    { runAccessibilityAudit },
+    { runSeoAudit },
+    { runSecurityAudit },
+  ] = await Promise.all([
+    import("./lighthouse-runner"),
+    import("./accessibility-runner"),
+    import("./seo-runner"),
+    import("./security-runner"),
+  ]);
 
   await checkpoint(scanId);
   await updateScanProgress(scanId, "initializing", { url, host });

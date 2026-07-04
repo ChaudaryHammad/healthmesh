@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_noStore as noStore } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -79,6 +80,7 @@ export async function startScanAction(websiteId: string) {
 }
 
 export async function getScanStatusAction(scanId: string) {
+  noStore();
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Unauthorized." };
 
@@ -98,16 +100,35 @@ export async function getScanStatusAction(scanId: string) {
       accessibilityScore: true,
       seoScore: true,
       securityScore: true,
+      fcp: true,
+      lcp: true,
+      cls: true,
+      inp: true,
+      tbt: true,
       errorMessage: true,
       startedAt: true,
       completedAt: true,
       createdAt: true,
+      _count: { select: { issues: true } },
+      issues: {
+        where: { severity: "CRITICAL" },
+        select: { id: true },
+      },
     },
   });
 
   if (!scan) return { success: false, error: "Scan not found." };
 
-  return { success: true, data: scan };
+  const { _count, issues, ...rest } = scan;
+
+  return {
+    success: true,
+    data: {
+      ...rest,
+      issueCount: _count.issues,
+      criticalCount: issues.length,
+    },
+  };
 }
 
 export async function cancelScanAction(scanId: string) {
