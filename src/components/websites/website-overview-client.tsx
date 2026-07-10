@@ -38,7 +38,7 @@ import {
   vitalRatingClasses,
   vitalRatingLabel,
 } from "@/lib/web-vitals";
-import { formatNextScanAt } from "@/lib/scan-schedule";
+import { NextScanSchedule } from "@/components/websites/next-scan-schedule";
 import { useAuditScan } from "@/hooks/use-audit-scan";
 import { AuditProgressPanel } from "@/components/websites/audit-progress-panel";
 import { cn } from "@/lib/utils";
@@ -415,11 +415,14 @@ export function WebsiteOverviewClient({
             <Badge variant="outline" className="capitalize font-normal">
               {website.scanFrequency.toLowerCase()} schedule
             </Badge>
-            {website.nextScanAt ? (
+            {website.nextScanAt && website.scanFrequency !== "MANUAL" ? (
               <Badge variant="outline" className="font-normal gap-1">
                 <CalendarClock className="w-3 h-3" />
-                Next{" "}
-                {formatNextScanAt(new Date(website.nextScanAt), website.scanTimezone ?? "UTC")}
+                <NextScanSchedule
+                  nextScanAt={website.nextScanAt}
+                  timezone={website.scanTimezone ?? "UTC"}
+                  variant="compact"
+                />
               </Badge>
             ) : null}
           </div>
@@ -667,12 +670,15 @@ export function WebsiteOverviewClient({
                 <span className="text-muted-foreground">Frequency</span>
                 <span className="font-medium capitalize">{website.scanFrequency.toLowerCase()}</span>
               </div>
-              {website.nextScanAt ? (
-                <div className="flex items-center justify-between gap-3">
+              {website.nextScanAt && website.scanFrequency !== "MANUAL" ? (
+                <div className="flex items-start justify-between gap-3">
                   <span className="text-muted-foreground">Next run</span>
-                  <span className="font-medium text-right text-xs sm:text-sm">
-                    {formatNextScanAt(new Date(website.nextScanAt), website.scanTimezone ?? "UTC")}
-                  </span>
+                  <NextScanSchedule
+                    nextScanAt={website.nextScanAt}
+                    timezone={website.scanTimezone ?? "UTC"}
+                    variant="block"
+                    className="text-right"
+                  />
                 </div>
               ) : null}
             </div>

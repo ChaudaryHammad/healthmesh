@@ -46,9 +46,13 @@ interface Website {
 
 interface WebsitesClientProps {
   initialWebsites: Website[];
+  canScheduleScans?: boolean;
 }
 
-export default function WebsitesClient({ initialWebsites }: WebsitesClientProps) {
+export default function WebsitesClient({
+  initialWebsites,
+  canScheduleScans = false,
+}: WebsitesClientProps) {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [view, setView] = useState<"grid" | "table">("grid");
@@ -151,7 +155,10 @@ export default function WebsitesClient({ initialWebsites }: WebsitesClientProps)
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-md p-2">
-          <WebsiteForm onSuccess={() => setModalOpen(false)} />
+          <WebsiteForm
+            canScheduleScans={canScheduleScans}
+            onSuccess={() => setModalOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

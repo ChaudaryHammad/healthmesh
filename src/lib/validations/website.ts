@@ -1,16 +1,23 @@
 import { z } from "zod";
 import { ScanFrequency } from "@prisma/client";
+import { normalizeWebsiteUrl } from "@/lib/website-host";
 
 export const websiteSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters."),
     url: z
       .string()
-      .url("Please enter a valid website URL.")
-      .refine(
-        (val) => val.startsWith("http://") || val.startsWith("https://"),
-        "URL must start with http:// or https://"
-      ),
+      .trim()
+      .min(1, "Please enter a website URL.")
+      .superRefine((val, ctx) => {
+        if (!normalizeWebsiteUrl(val)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Please enter a valid website URL.",
+          });
+        }
+      })
+      .transform((val) => normalizeWebsiteUrl(val) as string),
     scanFrequency: z.nativeEnum(ScanFrequency).default(ScanFrequency.MANUAL),
     scanTimezone: z.string().min(1).default("UTC"),
     scanTimeOfDay: z

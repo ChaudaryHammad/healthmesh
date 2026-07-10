@@ -139,16 +139,57 @@ export function computeNextScanAt(
   return candidate;
 }
 
+export function formatTimezoneLabel(timezone: string): string {
+  return timezone.replace(/_/g, " ");
+}
+
 export function formatNextScanAt(date: Date | null | undefined, timezone = "UTC"): string | null {
   if (!date) return null;
-  return new Intl.DateTimeFormat(undefined, {
+
+  const formatted = new Intl.DateTimeFormat(undefined, {
     timeZone: timezone,
     weekday: "short",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   }).format(date);
+
+  return `${formatted} · ${formatTimezoneLabel(timezone)}`;
+}
+
+export function formatNextScanCountdown(
+  target: Date,
+  now: Date = new Date(),
+  options: { compact?: boolean } = {}
+): string {
+  const diffMs = target.getTime() - now.getTime();
+
+  if (diffMs <= 0) {
+    return options.compact ? "Due now" : "Due now";
+  }
+
+  const totalMinutes = Math.floor(diffMs / 60_000);
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (options.compact) {
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m`;
+    return "<1m";
+  }
+
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days} day${days === 1 ? "" : "s"}`);
+  if (hours > 0) parts.push(`${hours} hr${hours === 1 ? "" : "s"}`);
+  if (minutes > 0 || parts.length === 0) {
+    parts.push(`${minutes} min`);
+  }
+
+  return `in ${parts.slice(0, 2).join(" ")}`;
 }
 
 export function canUseAutomatedScans(frequency: ScanFrequency): boolean {

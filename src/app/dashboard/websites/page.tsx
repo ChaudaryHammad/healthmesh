@@ -1,5 +1,6 @@
 import React from "react";
 import { auth } from "@/lib/auth";
+import { getEntitlements } from "@/lib/entitlements";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import WebsitesClient from "./WebsitesClient";
@@ -14,7 +15,8 @@ export default async function WebsitesPage() {
     redirect("/login");
   }
 
-  const websites = await prisma.website.findMany({
+  const [websites, entitlements] = await Promise.all([
+    prisma.website.findMany({
     where: {
       userId: session.user.id,
       deletedAt: null,
@@ -26,7 +28,9 @@ export default async function WebsitesPage() {
       },
     },
     orderBy: { createdAt: "desc" },
-  });
+  }),
+    getEntitlements(session.user.id),
+  ]);
 
   const serialized = websites.map((site) => ({
     id: site.id,
@@ -45,5 +49,10 @@ export default async function WebsitesPage() {
     })),
   }));
 
-  return <WebsitesClient initialWebsites={serialized} />;
+  return (
+    <WebsitesClient
+      initialWebsites={serialized}
+      canScheduleScans={entitlements.canScheduleScans}
+    />
+  );
 }

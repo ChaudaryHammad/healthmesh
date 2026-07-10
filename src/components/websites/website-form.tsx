@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useTransition, useState } from "react";
+import React, { useMemo, useTransition, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { websiteSchema } from "@/lib/validations/website";
@@ -25,7 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatNextScanAt } from "@/lib/scan-schedule";
+import { NextScanSchedule } from "@/components/websites/next-scan-schedule";
+import { computeNextScanAt } from "@/lib/scan-schedule";
 
 const TIMEZONE_OPTIONS = [
   "UTC",
@@ -51,7 +52,11 @@ const WEEKDAYS = [
   { value: 4, label: "Thursday" },
   { value: 5, label: "Friday" },
   { value: 6, label: "Saturday" },
-];
+] as const;
+
+function getWeekdayLabel(dayValue: number | null | undefined): string {
+  return WEEKDAYS.find((day) => day.value === dayValue)?.label ?? "Monday";
+}
 
 interface WebsiteFormProps {
   websiteId?: string;
@@ -103,9 +108,30 @@ export function WebsiteForm({
 
   const scanFrequency = watch("scanFrequency");
   const scanTimezone = watch("scanTimezone");
-  const nextScanPreview = defaultValues?.nextScanAt
-    ? formatNextScanAt(new Date(defaultValues.nextScanAt), scanTimezone ?? "UTC")
-    : null;
+  const scanTimeOfDay = watch("scanTimeOfDay");
+  const scanDayOfWeek = watch("scanDayOfWeek");
+  const scanDayOfMonth = watch("scanDayOfMonth");
+
+  const nextScanAt = useMemo(() => {
+    if (scanFrequency === ScanFrequency.MANUAL || !canScheduleScans) {
+      return null;
+    }
+
+    return computeNextScanAt({
+      frequency: scanFrequency,
+      timezone: scanTimezone ?? "UTC",
+      timeOfDay: scanTimeOfDay,
+      dayOfWeek: scanDayOfWeek,
+      dayOfMonth: scanDayOfMonth,
+    });
+  }, [
+    scanFrequency,
+    scanTimezone,
+    scanTimeOfDay,
+    scanDayOfWeek,
+    scanDayOfMonth,
+    canScheduleScans,
+  ]);
 
   const onSubmit = (data: {
     name: string;
@@ -193,7 +219,9 @@ export function WebsiteForm({
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground">Audit schedule</p>
                 <p className="text-xs text-muted-foreground">
-                  Automated scans require Pro or Agency. Manual audits are always available.
+                  {canScheduleScans
+                    ? "Choose how often LoopNode should run automated audits for this site."
+                    : "Automated scans require Pro or Agency. Manual audits are always available."}
                 </p>
               </div>
             </div>
@@ -287,7 +315,9 @@ export function WebsiteForm({
                           disabled={isPending}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select day" />
+                            <SelectValue placeholder="Select day">
+                              {(value) => getWeekdayLabel(Number(value))}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {WEEKDAYS.map((day) => (
@@ -326,10 +356,15 @@ export function WebsiteForm({
               </div>
             ) : null}
 
-            {nextScanPreview ? (
-              <p className="text-xs text-muted-foreground">
-                Next scheduled audit: <span className="text-foreground font-medium">{nextScanPreview}</span>
-              </p>
+            {nextScanAt ? (
+              <div className="rounded-lg border border-border/20 bg-background/60 px-3 py-2">
+                <p className="text-xs text-muted-foreground mb-1">Next scheduled audit</p>
+                <NextScanSchedule
+                  nextScanAt={nextScanAt}
+                  timezone={scanTimezone ?? "UTC"}
+                  variant="block"
+                />
+              </div>
             ) : null}
           </div>
 
