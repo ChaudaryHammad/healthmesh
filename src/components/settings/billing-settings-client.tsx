@@ -22,7 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress, ProgressIndicator, ProgressTrack } from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatDateTime } from "@/lib/utils";
 import { PLAN_PRICES_USD, PLAN_LABELS } from "@/lib/plans";
@@ -118,11 +118,10 @@ export function BillingSettingsClient({
                 {entitlements.websiteCount} / {entitlements.websiteLimit}
               </span>
             </div>
-            <Progress value={usagePercent} className="gap-0">
-              <ProgressTrack className="h-2">
-                <ProgressIndicator />
-              </ProgressTrack>
-            </Progress>
+            <Progress
+              value={usagePercent}
+              className="gap-0 [&_[data-slot=progress-track]]:h-2"
+            />
             <p className="text-xs text-muted-foreground">
               {entitlements.websitesRemaining} slot{entitlements.websitesRemaining === 1 ? "" : "s"}{" "}
               remaining · Each domain can be reconnected once after removal
