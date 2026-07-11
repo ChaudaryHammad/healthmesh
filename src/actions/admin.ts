@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin-auth";
 import { createTrialSubscription, ensureTrialSubscription } from "@/lib/subscription";
 import { getWebsiteLimitFromSubscription, getEntitlements } from "@/lib/entitlements";
+import { dispatchAuditScan } from "@/lib/audit-dispatch";
+import { failAuditScan, reaperStaleRunningScans } from "@/lib/scanner/fail-audit-scan";
 import {
   notifyLimitsIncreased,
   notifyUpgradeApproved,
@@ -196,6 +198,8 @@ export async function adminForceScanAction(websiteId: string) {
     });
     if (!website) return { success: false, error: "Website not found or disabled." };
 
+    await reaperStaleRunningScans();
+
     const running = await prisma.scan.findFirst({
       where: { websiteId, status: "RUNNING" },
     });
@@ -212,20 +216,46 @@ export async function adminForceScanAction(websiteId: string) {
         websiteId,
         status: "RUNNING",
         startedAt: new Date(),
+        phase: "queued",
+        statusMessage: "Admin force audit queued…",
+        progressPercent: 2,
       },
     });
 
-    await prisma.activityLog.create({
-      data: {
-        userId: auth.adminId,
-        action: "ADMIN_FORCE_SCAN",
-        description: `Admin triggered audit for ${website.name}`,
-        metadata: { websiteId, scanId: scan.id },
-      },
-    });
+    try {
+      const dispatch = await dispatchAuditScan(scan.id, { forceTrigger: true });
 
-    revalidateAdmin();
-    return { success: true, data: { scanId: scan.id }, message: "Audit scan started." };
+      await prisma.activityLog.create({
+        data: {
+          userId: auth.adminId,
+          action: "ADMIN_FORCE_SCAN",
+          description: `Admin triggered audit for ${website.name}`,
+          metadata: {
+            websiteId,
+            scanId: scan.id,
+            triggerRunId: dispatch.runId ?? null,
+          },
+        },
+      });
+
+      revalidateAdmin();
+      revalidatePath("/dashboard");
+      revalidatePath("/dashboard/websites");
+      revalidatePath(`/dashboard/websites/${websiteId}`);
+
+      return {
+        success: true,
+        data: { scanId: scan.id, triggerRunId: dispatch.runId ?? null },
+        message: dispatch.mode === "trigger"
+          ? "Audit queued on Trigger.dev."
+          : "Audit started locally.",
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to queue audit on the worker.";
+      await failAuditScan(scan.id, message);
+      return { success: false, error: message, data: { scanId: scan.id } };
+    }
   } catch (error) {
     console.error("adminForceScanAction:", error);
     return { success: false, error: "Failed to start scan." };

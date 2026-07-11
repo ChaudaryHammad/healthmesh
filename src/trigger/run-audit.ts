@@ -2,7 +2,7 @@ import { logger, task } from "@trigger.dev/sdk";
 
 export const runAuditTask = task({
   id: "run-audit",
-  machine: { preset: "medium-1x" },
+  machine: { preset: "large-1x" },
   maxDuration: 300,
   retry: {
     maxAttempts: 1,

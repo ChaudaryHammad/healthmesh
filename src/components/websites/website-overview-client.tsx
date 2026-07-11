@@ -382,7 +382,7 @@ export function WebsiteOverviewClient({
               ) : (
                 <Button size="lg" onClick={() => void startScan()} className="gap-2 shadow-none">
                   <Zap className="w-4 h-4" />
-                  Run URL audit
+                  Run audit
                 </Button>
               )}
             </div>

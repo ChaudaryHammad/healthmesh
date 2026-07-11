@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Globe, AlertCircle, ArrowRight, Trash2, Edit } from "lucide-react";
+import { Globe, AlertCircle, ArrowRight, Trash2, Edit, Square, Zap } from "lucide-react";
 import { DeleteWebsiteDialog } from "@/components/websites/delete-website-dialog";
-import { AuditScanControls } from "@/components/websites/audit-scan-controls";
+import { AuditProgressPanel } from "@/components/websites/audit-progress-panel";
+import { useAuditScan } from "@/hooks/use-audit-scan";
+import type { WebsiteListScan } from "@/lib/website-scan-display";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -16,31 +18,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-interface Scan {
-  id: string;
-  status: string;
-  overallScore: number | null;
-  performanceScore: number | null;
-  accessibilityScore: number | null;
-  seoScore: number | null;
-  securityScore: number | null;
-  createdAt: Date;
-}
+import { cn } from "@/lib/utils";
 
 interface Website {
   id: string;
   name: string;
   url: string;
   scanFrequency: string;
-  scans: Scan[];
+  scans: WebsiteListScan[];
+  latestScan: WebsiteListScan | null;
+  runningScan: WebsiteListScan | null;
+  displayScan: WebsiteListScan | null;
 }
 
 interface WebsiteCardProps {
   website: Website;
 }
 
-function ScoreBadge({ score }: { score: number | null }) {
+function ScoreBadge({ score, muted = false }: { score: number | null; muted?: boolean }) {
   if (score === null) {
     return (
       <Badge variant="secondary" className="w-8 h-8 justify-center tabular-nums">
@@ -54,7 +49,14 @@ function ScoreBadge({ score }: { score: number | null }) {
   else if (score >= 50) className = "text-amber-500 bg-amber-500/10 border-amber-500/20";
 
   return (
-    <Badge variant="outline" className={`w-8 h-8 justify-center tabular-nums font-bold ${className}`}>
+    <Badge
+      variant="outline"
+      className={cn(
+        "w-8 h-8 justify-center tabular-nums font-bold",
+        className,
+        muted && "opacity-70"
+      )}
+    >
       {score}
     </Badge>
   );
@@ -62,15 +64,32 @@ function ScoreBadge({ score }: { score: number | null }) {
 
 export function WebsiteCard({ website }: WebsiteCardProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const latestScan = website.scans[0];
+  const { displayScan, runningScan } = website;
 
-  const scoreRows = latestScan
+  const initialProgress = runningScan
+    ? {
+        phase: runningScan.phase ?? "queued",
+        statusMessage: runningScan.statusMessage ?? "Audit in progress…",
+        progressPercent: runningScan.progressPercent ?? 2,
+        startedAt: runningScan.startedAt ?? runningScan.createdAt,
+      }
+    : null;
+
+  const { startScan, cancelScan, isRunning, isCancelling, error, progress, completedScan } = useAuditScan({
+    websiteId: website.id,
+    initialRunningScanId: runningScan?.id ?? null,
+    initialProgress,
+  });
+
+  const metricsScan = completedScan ?? displayScan;
+
+  const scoreRows = metricsScan
     ? [
-        { label: "ALL", score: latestScan.overallScore },
-        { label: "PERF", score: latestScan.performanceScore },
-        { label: "A11Y", score: latestScan.accessibilityScore },
-        { label: "SEO", score: latestScan.seoScore },
-        { label: "SEC", score: latestScan.securityScore },
+        { label: "ALL", score: metricsScan.overallScore },
+        { label: "PERF", score: metricsScan.performanceScore },
+        { label: "A11Y", score: metricsScan.accessibilityScore },
+        { label: "SEO", score: metricsScan.seoScore },
+        { label: "SEC", score: metricsScan.securityScore },
       ]
     : [];
 
@@ -111,26 +130,41 @@ export function WebsiteCard({ website }: WebsiteCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent>
-        {latestScan ? (
-          <div className="grid grid-cols-5 gap-2 text-center">
-            {scoreRows.map((row) => (
-              <div key={row.label} className="flex flex-col items-center">
-                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">
-                  {row.label}
-                </span>
-                <ScoreBadge score={row.score} />
-              </div>
-            ))}
+      <CardContent className="space-y-4">
+        {metricsScan ? (
+          <div className="space-y-2">
+            {isRunning && displayScan ? (
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                Last completed scores
+              </p>
+            ) : null}
+            <div className="grid grid-cols-5 gap-2 text-center">
+              {scoreRows.map((row) => (
+                <div key={row.label} className="flex flex-col items-center">
+                  <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+                    {row.label}
+                  </span>
+                  <ScoreBadge score={row.score} muted={isRunning} />
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <Alert>
             <AlertCircle />
             <AlertDescription className="text-xs">
-              No scan reports found. Click Audit.
+              No completed audits yet. Run your first audit to see scores.
             </AlertDescription>
           </Alert>
         )}
+
+        {isRunning ? (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-3">
+            <AuditProgressPanel progress={progress} compact />
+          </div>
+        ) : null}
+
+        {error ? <p className="text-xs text-destructive">{error}</p> : null}
       </CardContent>
 
       <CardFooter className="flex items-center justify-between border-t border-border/30">
@@ -139,13 +173,28 @@ export function WebsiteCard({ website }: WebsiteCardProps) {
         </Badge>
 
         <div className="flex items-center gap-3">
-          <AuditScanControls
-            websiteId={website.id}
-            runningScanId={
-              latestScan?.status === "RUNNING" ? latestScan.id : null
-            }
-            className="h-auto p-0 text-xs"
-          />
+          {isRunning ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => void cancelScan()}
+              disabled={isCancelling}
+              className="h-8 gap-1.5 text-xs"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+              {isCancelling ? "Stopping…" : "Stop audit"}
+            </Button>
+          ) : (
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => void startScan()}
+              className="h-8 gap-1.5 text-xs px-0"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              Audit now
+            </Button>
+          )}
           <ButtonLink
             href={`/dashboard/websites/${website.id}`}
             variant="link"

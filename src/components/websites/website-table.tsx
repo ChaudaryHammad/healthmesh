@@ -16,27 +16,20 @@ import {
 } from "lucide-react";
 import { DeleteWebsiteDialog } from "@/components/websites/delete-website-dialog";
 import { AuditScanControls } from "@/components/websites/audit-scan-controls";
+import type { WebsiteListScan } from "@/lib/website-scan-display";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-interface Scan {
-  id: string;
-  status: string;
-  overallScore: number | null;
-  performanceScore: number | null;
-  accessibilityScore: number | null;
-  seoScore: number | null;
-  securityScore: number | null;
-  createdAt: Date;
-}
 
 interface Website {
   id: string;
   name: string;
   url: string;
   scanFrequency: string;
-  scans: Scan[];
+  scans: WebsiteListScan[];
+  latestScan: WebsiteListScan | null;
+  runningScan: WebsiteListScan | null;
+  displayScan: WebsiteListScan | null;
 }
 
 interface WebsiteTableProps {
@@ -143,8 +136,10 @@ export function WebsiteTable({ websites }: WebsiteTableProps) {
   };
 
   const sorted = [...websites].sort((a, b) => {
-    const latestA = a.scans[0];
-    const latestB = b.scans[0];
+    const latestA = a.latestScan;
+    const latestB = b.latestScan;
+    const displayA = a.displayScan;
+    const displayB = b.displayScan;
     let valA: string | number;
     let valB: string | number;
 
@@ -152,8 +147,8 @@ export function WebsiteTable({ websites }: WebsiteTableProps) {
       valA = a.name.toLowerCase();
       valB = b.name.toLowerCase();
     } else if (sortKey === "overallScore") {
-      valA = latestA?.overallScore ?? -1;
-      valB = latestB?.overallScore ?? -1;
+      valA = displayA?.overallScore ?? -1;
+      valB = displayB?.overallScore ?? -1;
     } else if (sortKey === "frequency") {
       valA = a.scanFrequency;
       valB = b.scanFrequency;
@@ -183,7 +178,17 @@ export function WebsiteTable({ websites }: WebsiteTableProps) {
 
       <div className="divide-y divide-border/20">
         {sorted.map((site) => {
-          const latestScan = site.scans[0];
+          const { latestScan, runningScan, displayScan } = site;
+          const statusScan = runningScan ?? latestScan;
+          const initialProgress = runningScan
+            ? {
+                phase: runningScan.phase ?? "queued",
+                statusMessage: runningScan.statusMessage ?? "Audit in progress…",
+                progressPercent: runningScan.progressPercent ?? 2,
+                startedAt: runningScan.startedAt ?? runningScan.createdAt,
+              }
+            : null;
+
           return (
             <div
               key={site.id}
@@ -202,11 +207,11 @@ export function WebsiteTable({ websites }: WebsiteTableProps) {
                 </a>
               </div>
 
-              <StatusBadge status={latestScan?.status} />
-              <ScoreText score={latestScan?.overallScore ?? null} />
-              <ScoreText score={latestScan?.performanceScore ?? null} />
-              <ScoreText score={latestScan?.accessibilityScore ?? null} />
-              <ScoreText score={latestScan?.seoScore ?? null} />
+              <StatusBadge status={statusScan?.status} />
+              <ScoreText score={displayScan?.overallScore ?? null} />
+              <ScoreText score={displayScan?.performanceScore ?? null} />
+              <ScoreText score={displayScan?.accessibilityScore ?? null} />
+              <ScoreText score={displayScan?.seoScore ?? null} />
 
               <Badge variant="secondary" className="w-fit uppercase text-[11px]">
                 {site.scanFrequency.toLowerCase()}
@@ -215,9 +220,8 @@ export function WebsiteTable({ websites }: WebsiteTableProps) {
               <div className="flex items-center gap-1 justify-end">
                 <AuditScanControls
                   websiteId={site.id}
-                  runningScanId={
-                    latestScan?.status === "RUNNING" ? latestScan.id : null
-                  }
+                  runningScanId={runningScan?.id ?? null}
+                  initialProgress={initialProgress}
                   iconOnly
                   runVariant="ghost"
                   size="icon-sm"

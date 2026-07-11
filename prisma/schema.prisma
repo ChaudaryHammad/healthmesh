@@ -215,6 +215,8 @@ model Website {
   scanDayOfMonth   Int?
   nextScanAt       DateTime?
   lastScheduledAt  DateTime?
+  /// Trigger.dev run id for the delayed `dispatch-scheduled-scan` task.
+  pendingScanRunId String?
   userId        String
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt

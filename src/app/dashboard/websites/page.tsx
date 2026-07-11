@@ -2,6 +2,7 @@ import React from "react";
 import { auth } from "@/lib/auth";
 import { getEntitlements } from "@/lib/entitlements";
 import { prisma } from "@/lib/prisma";
+import { resolveWebsiteScanDisplay } from "@/lib/website-scan-display";
 import { redirect } from "next/navigation";
 import WebsitesClient from "./WebsitesClient";
 
@@ -24,7 +25,21 @@ export default async function WebsitesPage() {
     include: {
       scans: {
         orderBy: { createdAt: "desc" },
-        take: 1,
+        take: 5,
+        select: {
+          id: true,
+          status: true,
+          overallScore: true,
+          performanceScore: true,
+          accessibilityScore: true,
+          seoScore: true,
+          securityScore: true,
+          phase: true,
+          statusMessage: true,
+          progressPercent: true,
+          startedAt: true,
+          createdAt: true,
+        },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -32,12 +47,8 @@ export default async function WebsitesPage() {
     getEntitlements(session.user.id),
   ]);
 
-  const serialized = websites.map((site) => ({
-    id: site.id,
-    name: site.name,
-    url: site.url,
-    scanFrequency: site.scanFrequency,
-    scans: site.scans.map((scan) => ({
+  const serialized = websites.map((site) => {
+    const scans = site.scans.map((scan) => ({
       id: scan.id,
       status: scan.status,
       overallScore: scan.overallScore,
@@ -45,9 +56,26 @@ export default async function WebsitesPage() {
       accessibilityScore: scan.accessibilityScore,
       seoScore: scan.seoScore,
       securityScore: scan.securityScore,
+      phase: scan.phase,
+      statusMessage: scan.statusMessage,
+      progressPercent: scan.progressPercent,
+      startedAt: scan.startedAt,
       createdAt: scan.createdAt,
-    })),
-  }));
+    }));
+
+    const { latestScan, runningScan, displayScan } = resolveWebsiteScanDisplay(scans);
+
+    return {
+      id: site.id,
+      name: site.name,
+      url: site.url,
+      scanFrequency: site.scanFrequency,
+      scans,
+      latestScan,
+      runningScan,
+      displayScan,
+    };
+  });
 
   return (
     <WebsitesClient

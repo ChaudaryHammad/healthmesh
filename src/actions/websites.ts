@@ -6,6 +6,10 @@ import { getEntitlements } from "@/lib/entitlements";
 import { assertCanAddWebsite, consumeDomainSlot, getDomainDeleteNotice, getDomainSlotForHost, releaseDomainSlot } from "@/lib/website-slots";
 import { ScanFrequency } from "@prisma/client";
 import { computeNextScanAt } from "@/lib/scan-schedule";
+import {
+  cancelScheduledScanTrigger,
+  syncScheduledScanTrigger,
+} from "@/lib/scheduled-scan-trigger";
 import { websiteSchema } from "@/lib/validations/website";
 import { revalidatePath } from "next/cache";
 
@@ -76,6 +80,12 @@ export async function addWebsiteAction(values: unknown) {
     });
 
     await consumeDomainSlot(userId, website.id, url);
+
+    if (scanFrequency !== ScanFrequency.MANUAL) {
+      void syncScheduledScanTrigger(website.id).catch((error) => {
+        console.error("Failed to queue scheduled scan trigger:", error);
+      });
+    }
 
     await prisma.activityLog.create({
       data: {
@@ -160,6 +170,10 @@ export async function editWebsiteAction(id: string, values: any) {
       },
     });
 
+    void syncScheduledScanTrigger(updated.id).catch((error) => {
+      console.error("Failed to queue scheduled scan trigger:", error);
+    });
+
     // Create Audit Log
     await prisma.activityLog.create({
       data: {
@@ -228,11 +242,19 @@ export async function deleteWebsiteAction(id: string) {
         userId,
         deletedAt: null,
       },
+      select: {
+        id: true,
+        name: true,
+        url: true,
+        pendingScanRunId: true,
+      },
     });
 
     if (!website) {
       return { success: false, error: "Website not found or access denied." };
     }
+
+    await cancelScheduledScanTrigger(website.pendingScanRunId);
 
     // Perform soft delete
     const deleted = await prisma.website.update({

@@ -33,10 +33,55 @@ type LighthouseAudit = {
     type?: string;
     overallSavingsMs?: number;
     overallSavingsBytes?: number;
-    headings?: Array<{ key?: string; text?: string; valueType?: string }>;
-    items?: Array<Record<string, unknown>>;
+    headings?: Array<{ key?: string; text?: string; valueType?: string }> | unknown;
+    items?: unknown;
   };
 };
+
+function normalizeAuditDetailItems(value: unknown): Array<Record<string, unknown>> {
+  if (Array.isArray(value)) {
+    return value.filter(
+      (item): item is Record<string, unknown> =>
+        typeof item === "object" && item !== null && !Array.isArray(item)
+    );
+  }
+
+  if (typeof value === "object" && value !== null) {
+    const record = value as Record<string, unknown>;
+    const values = Object.values(record);
+    if (
+      values.length > 0 &&
+      values.every((entry) => typeof entry === "object" && entry !== null && !Array.isArray(entry))
+    ) {
+      return values as Array<Record<string, unknown>>;
+    }
+
+    if (
+      "url" in record ||
+      "label" in record ||
+      "sourceURL" in record ||
+      "node" in record ||
+      "wastedBytes" in record
+    ) {
+      return [record];
+    }
+  }
+
+  return [];
+}
+
+function normalizeAuditHeadings(
+  value: unknown
+): Array<{ key?: string; text?: string; valueType?: string }> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(
+    (heading): heading is { key?: string; text?: string; valueType?: string } =>
+      typeof heading === "object" && heading !== null
+  );
+}
 
 const PERFORMANCE_AUDIT_COPY: Record<
   string,
@@ -242,7 +287,7 @@ function pickOffenderUrl(item: Record<string, unknown>): string | null {
 }
 
 function extractTopOffenders(audit: LighthouseAudit): PerformanceIssueOffender[] {
-  const items = audit.details?.items ?? [];
+  const items = normalizeAuditDetailItems(audit.details?.items);
   return items
     .map((item) => {
       const node = item.node;
@@ -287,7 +332,7 @@ function buildPerformanceMetadata(audit: LighthouseAudit, url: string): Performa
     stripMarkdownLinks(audit.title),
     "Lighthouse flagged a performance issue that needs review."
   )!;
-  const headings = (audit.details?.headings ?? [])
+  const headings = normalizeAuditHeadings(audit.details?.headings)
     .map((heading) => stripMarkdownLinks(heading.text))
     .filter(Boolean);
 

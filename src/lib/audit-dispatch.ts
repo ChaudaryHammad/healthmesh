@@ -33,8 +33,7 @@ export async function dispatchAuditScan(
 
   // Never run Chrome/Lighthouse on Vercel serverless — control plane only.
   const onVercel = Boolean(process.env.VERCEL);
-  // Scheduled scans run inside the small `scheduled-scans` cron task — always queue
-  // the heavy audit to `run-audit` on a medium machine instead of running inline.
+  // Queue the heavy audit to `run-audit` on a large machine instead of running inline.
   const preferTrigger =
     options?.forceTrigger === true || getAuditRunnerMode() === "trigger" || onVercel;
 
@@ -48,7 +47,7 @@ export async function dispatchAuditScan(
     const handle = await tasks.trigger<typeof runAuditTask>(
       "run-audit",
       { scanId },
-      { machine: "medium-1x" }
+      { machine: "large-1x" }
     );
 
     const updated = await prisma.scan.updateMany({

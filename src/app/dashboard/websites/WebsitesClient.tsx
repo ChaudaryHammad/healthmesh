@@ -25,16 +25,9 @@ const WebsiteForm = dynamic(
   { loading: () => <WebsiteFormSkeleton /> }
 );
 
-interface Scan {
-  id: string;
-  status: string;
-  overallScore: number | null;
-  performanceScore: number | null;
-  accessibilityScore: number | null;
-  seoScore: number | null;
-  securityScore: number | null;
-  createdAt: Date;
-}
+import type { WebsiteListScan } from "@/lib/website-scan-display";
+
+interface Scan extends WebsiteListScan {}
 
 interface Website {
   id: string;
@@ -42,6 +35,9 @@ interface Website {
   url: string;
   scanFrequency: string;
   scans: Scan[];
+  latestScan: Scan | null;
+  runningScan: Scan | null;
+  displayScan: Scan | null;
 }
 
 interface WebsitesClientProps {
