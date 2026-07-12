@@ -12,18 +12,30 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+/**
+ * Uptime check runner.
+ *
+ * Vercel Hobby only allows one cron per day — see vercel.json (daily safety net).
+ * For real monitoring intervals (1–15 min), call this route every minute/few minutes from:
+ * - Vercel Pro cron (* * * * *), or
+ * - External cron / GitHub Action with Authorization: Bearer $CRON_SECRET
+ */
 function authorize(request: NextRequest): boolean {
   const secret = env.CRON_SECRET?.trim();
+  const header = request.headers.get("authorization");
+  const vercelCron = request.headers.get("x-vercel-cron");
+
   if (!secret) {
     // Local/dev without secret: allow. Production should always set CRON_SECRET.
     return env.NODE_ENV !== "production";
   }
-  const header = request.headers.get("authorization");
+
   if (header === `Bearer ${secret}`) return true;
-  // Vercel Cron also sends this header on newer runtimes
-  const cronHeader = request.headers.get("x-vercel-cron");
-  if (cronHeader && header === `Bearer ${secret}`) return true;
-  return header === `Bearer ${secret}`;
+
+  // Vercel Cron invocations include x-vercel-cron and Authorization when CRON_SECRET is set
+  if (vercelCron === "1" && header === `Bearer ${secret}`) return true;
+
+  return false;
 }
 
 async function handle(request: NextRequest) {
@@ -32,12 +44,7 @@ async function handle(request: NextRequest) {
   }
 
   const { processed, errors } = await processDueUptimeChecks(UPTIME_CRON_BATCH_SIZE);
-
-  // Light prune once per hour-ish: only when minute is 0
-  let pruned = 0;
-  if (new Date().getMinutes() === 0) {
-    pruned = await pruneOldUptimeChecks(UPTIME_CHECK_RETENTION_DAYS);
-  }
+  const pruned = await pruneOldUptimeChecks(UPTIME_CHECK_RETENTION_DAYS);
 
   return NextResponse.json({
     ok: true,
