@@ -14,7 +14,7 @@ Module completion status lives in [PROGRESS.md](./PROGRESS.md).
 | **Vercel** | Next.js app, API routes, auth, UI, broken-link scans |
 | **Supabase** | PostgreSQL — users, websites, scans, issues, billing |
 | **Cloudinary** | Profile photos, report PDFs/CSVs |
-| **Trigger.dev** | Lighthouse / Puppeteer audits (`run-audit`, `scheduled-scans`) |
+| **Trigger.dev** | Lighthouse / Puppeteer audits (`run-audit`, `scheduled-scans`) and uptime probes (`uptime-checks`) |
 | **Gmail SMTP** | Verification, password reset, contact, billing emails |
 
 ```
@@ -48,7 +48,7 @@ PostgreSQL (Scan, Issue, scores)
 | `src/lib/audit-dispatch.ts` | Queue audits to Trigger or run locally |
 | `src/lib/entitlements.ts` | Plan limits and feature gates |
 | `src/lib/plans.ts` | Plan prices, site limits, scheduling copy |
-| `src/trigger/` | Trigger.dev tasks — `run-audit`, `scheduled-scans` |
+| `src/trigger/` | Trigger.dev tasks — `run-audit`, `scheduled-scans`, `uptime-checks` |
 | `src/broken-links/` | Broken-link crawler (runs on Vercel, not Trigger yet) |
 | `prisma/schema.prisma` | Database schema |
 

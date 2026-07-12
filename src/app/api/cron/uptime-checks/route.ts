@@ -13,12 +13,12 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 /**
- * Uptime check runner.
+ * Uptime check safety net / manual runner.
  *
- * Vercel Hobby only allows one cron per day — see vercel.json (daily safety net).
- * For real monitoring intervals (1–15 min), call this route every minute/few minutes from:
- * - Vercel Pro cron (* * * * *), or
- * - External cron / GitHub Action with Authorization: Bearer $CRON_SECRET
+ * Primary schedule: Trigger.dev task `uptime-checks` (`* * * * *`).
+ * This route remains for:
+ * - Vercel daily cron (vercel.json) as a backup
+ * - Local/manual: GET/POST with Authorization: Bearer $CRON_SECRET
  */
 function authorize(request: NextRequest): boolean {
   const secret = env.CRON_SECRET?.trim();

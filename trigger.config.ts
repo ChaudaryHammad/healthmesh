@@ -15,7 +15,7 @@ if (!project) {
   );
 }
 
-/** Env vars required by Trigger.dev tasks (audits, DB, scanners). */
+/** Env vars required by Trigger.dev tasks (audits, uptime, DB, scanners, email). */
 const TASK_ENV_KEYS = [
   "DATABASE_URL",
   "DIRECT_URL",
@@ -25,6 +25,11 @@ const TASK_ENV_KEYS = [
   "TRIGGER_SECRET_KEY",
   "TRIGGER_PROJECT_REF",
   "PUPPETEER_EXECUTABLE_PATH",
+  "EMAIL_FROM",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_USER",
+  "SMTP_PASS",
 ] as const;
 
 function taskEnv(): Record<string, string> {

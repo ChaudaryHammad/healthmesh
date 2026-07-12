@@ -79,7 +79,12 @@
 
   ---
 
-  ## Manual vs scheduled
+## Manual vs scheduled
 
-  - **Run check** — Immediate probe with saved settings; updates history/stats right away.
-  - **Scheduled** — Cron picks monitors whose `nextCheckAt` is due and runs the same probe logic.
+- **Run check** — Immediate probe with saved settings; updates history/stats right away.
+- **Scheduled** — Trigger.dev task `uptime-checks` runs **every minute** and probes monitors whose `nextCheckAt` is due. Your check interval (1m / 5m / 15m / 1h) controls how far ahead the next run is scheduled after each probe.
+- **Backup** — Vercel daily cron can still hit `/api/cron/uptime-checks` as a safety net if Trigger.dev misses a window.
+
+### Local development
+
+Scheduled checks need the Trigger.dev worker running (same as audits), e.g. `npx trigger.dev@latest dev` alongside `npm run dev`. Without it, only **Run check** updates the monitor.

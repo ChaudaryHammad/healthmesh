@@ -130,6 +130,21 @@ function formatRelativeTime(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString();
 }
 
+/** Next-check label: overdue times read clearly instead of "1h ago". */
+function formatNextCheck(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const due = new Date(iso).getTime();
+  const diff = due - Date.now();
+  if (diff <= 0) {
+    const overdueSec = Math.floor(-diff / 1000);
+    if (overdueSec < 60) return "Overdue";
+    const min = Math.floor(overdueSec / 60);
+    if (min < 60) return `Overdue by ${min}m`;
+    return `Overdue by ${Math.floor(min / 60)}h`;
+  }
+  return formatRelativeTime(iso);
+}
+
 export function WebsiteMonitoringClient({
   website,
   monitor,
@@ -377,7 +392,7 @@ export function WebsiteMonitoringClient({
             }
           />
           {monitor?.nextCheckAt && !monitor.paused && monitor.enabled ? (
-            <MetaItem label="Next" value={formatRelativeTime(monitor.nextCheckAt)} />
+            <MetaItem label="Next" value={formatNextCheck(monitor.nextCheckAt)} />
           ) : null}
         </dl>
       </header>
