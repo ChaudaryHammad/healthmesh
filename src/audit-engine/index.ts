@@ -53,7 +53,7 @@ async function report(
 
 /**
  * V1 Target URL Audit Scan Engine.
- * No crawling / UrlFrontier / BFS. Broken Links is a separate product.
+ * No crawling / UrlFrontier / BFS. Coverage is a separate product.
  */
 export async function runAuditEngine(
   options: RunAuditEngineOptions

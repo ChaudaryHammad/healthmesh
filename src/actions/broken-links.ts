@@ -59,7 +59,7 @@ export async function startBrokenLinkScanAction(
   if (running) {
     return {
       success: false,
-      error: "A broken link scan is already running. Wait for it to finish or refresh in a few minutes.",
+      error: "A coverage scan is already running. Wait for it to finish or refresh in a few minutes.",
     };
   }
 

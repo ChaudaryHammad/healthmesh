@@ -333,7 +333,7 @@ export function BrokenLinksFindingTable({
   }>;
 }) {
   if (rows.length === 0) {
-    return <Text style={sharedStyles.empty}>No broken links found in this scan.</Text>;
+    return <Text style={sharedStyles.empty}>No unreachable URLs found in this scan.</Text>;
   }
 
   // Full-width stacked findings — narrow table columns force hyphenation and unreadable URLs.
@@ -367,7 +367,7 @@ export function BrokenLinksFindingTable({
             </View>
           </View>
 
-          <Text style={[sharedStyles.th, { marginBottom: 2 }]}>Broken URL</Text>
+          <Text style={[sharedStyles.th, { marginBottom: 2 }]}>Unreachable URL</Text>
           <Text
             style={[
               sharedStyles.td,
@@ -418,7 +418,7 @@ export function GroupedBrokenLinksFindingTable({
   }>;
 }) {
   if (rows.length === 0) {
-    return <Text style={sharedStyles.empty}>No broken links found in this scan.</Text>;
+    return <Text style={sharedStyles.empty}>No unreachable URLs found in this scan.</Text>;
   }
 
   return (
@@ -454,7 +454,7 @@ export function GroupedBrokenLinksFindingTable({
             </Text>
           </View>
 
-          <Text style={[sharedStyles.th, { marginBottom: 2 }]}>Broken URL</Text>
+          <Text style={[sharedStyles.th, { marginBottom: 2 }]}>Unreachable URL</Text>
           <Text
             style={[
               sharedStyles.td,

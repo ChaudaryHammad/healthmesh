@@ -123,7 +123,7 @@ const homepageFaq = [
   {
     question: "What does an audit actually check?",
     answer:
-      "Performance (Lighthouse + Core Web Vitals), accessibility (axe-core WCAG rules), on-page SEO, live HTTP security headers, broken links, and score history across runs. Full details are on the features page.",
+      "Performance (Lighthouse + Core Web Vitals), accessibility (axe-core WCAG rules), on-page SEO, live HTTP security headers, coverage scans, and score history across runs. Full details are on the features page.",
   },
   {
     question: "Is this only for big teams?",
@@ -228,7 +228,7 @@ export function MarketingSections({ isLoggedIn }: MarketingSectionsProps) {
               <p className="text-muted-foreground">→ Scanning performance & vitals</p>
               <p className="text-muted-foreground">→ Checking accessibility</p>
               <p className="text-muted-foreground">→ Checking SEO + security headers</p>
-              <p className="text-muted-foreground">→ Crawling broken links</p>
+              <p className="text-muted-foreground">→ Coverage scans</p>
               <p className="pt-2 text-foreground">
                 <span className="text-primary">✓</span> Overall score:{" "}
                 <span className="font-semibold text-emerald-400">84</span>

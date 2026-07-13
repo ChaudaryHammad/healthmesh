@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | LoopNode",
   },
   description:
-    "Monitor performance, accessibility, SEO, and security with real Lighthouse and axe-core audits. Crawl broken links and track scores over time.",
+    "Monitor performance, accessibility, SEO, and security with real Lighthouse and axe-core audits. Run coverage scans for unreachable URLs and track scores over time.",
 };
 
 export default function RootLayout({

@@ -49,7 +49,7 @@ function canEnqueueMore(
 }
 
 /**
- * Broken Link Check engine — separate product from Audit Scan Engine.
+ * Coverage engine — separate product from Audit Scan Engine.
  * Crawls same-origin pages until the queue is empty (domain-bound).
  */
 export async function runBrokenLinkEngine(

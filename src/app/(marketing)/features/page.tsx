@@ -276,8 +276,8 @@ const modules = [
     ),
   },
   {
-    id: "broken-links",
-    label: "Broken Links",
+    id: "coverage",
+    label: "Coverage",
     subtitle: "Deep Crawler · BFS",
     icon: Link2,
     accent: "#60a5fa",
@@ -285,10 +285,10 @@ const modules = [
     border: "border-blue-400/20",
     bg: "from-blue-400/10 to-transparent",
     description:
-      "Broken links are checked outside the main audit so you can run full internal crawls or external outbound checks on demand. See progress live, filter by link type, copy broken URLs, and view the source page and DOM element for every failure.",
+      "Coverage runs outside the main audit so you can crawl pages, assets, and outbound URLs on demand. See progress live, filter by resource type, copy unreachable URLs, and view the source page and DOM element for every failure.",
     checks: [
       "Internal site-wide crawl (all levels)",
-      "External outbound link verification",
+      "External outbound URL verification",
       "Filter by pages, images, scripts, stylesheets",
       "HTTP status codes and error details",
       "Source page URL and element selector",
@@ -301,7 +301,7 @@ const modules = [
             <Network className="w-4 h-4 text-blue-400" />
             <span className="text-blue-400 font-bold uppercase tracking-widest text-[10px]">Crawl Results</span>
           </div>
-          <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold">4 Dead Links</span>
+          <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold">4 Unreachable</span>
         </div>
         
         <div className="p-4 space-y-3 relative z-10">
@@ -596,9 +596,9 @@ export default function FeaturesPage() {
                   "Not yet — LoopNode currently audits publicly accessible URLs. Authenticated page support is on the roadmap for a future release.",
               },
               {
-                question: "Is the broken link checker part of the main audit?",
+                question: "Is coverage part of the main audit?",
                 answer:
-                  "No — it runs separately so you can trigger it independently and control crawl depth. This prevents the main audit from timing out on large sites.",
+                  "No — Coverage runs separately so you can trigger it independently and control crawl depth. This prevents the main audit from timing out on large sites.",
               },
             ]}
           />

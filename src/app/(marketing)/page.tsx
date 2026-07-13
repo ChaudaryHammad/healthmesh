@@ -6,7 +6,7 @@ import { MarketingSections } from "@/components/marketing/marketing-sections";
 export const metadata = {
   title: "LoopNode — Website health monitoring & audits",
   description:
-    "Monitor performance, accessibility, SEO, and security. Crawl broken links, track scores over time, and fix issues before your users notice.",
+    "Monitor performance, accessibility, SEO, security, and coverage. Crawl unreachable pages and assets, track scores over time, and fix issues before your users notice.",
 };
 
 export default async function LandingPage() {

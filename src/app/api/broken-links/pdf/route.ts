@@ -98,7 +98,7 @@ export async function POST(request: Request) {
 
     const dateLabel = (scan.completedAt ?? new Date()).toISOString().slice(0, 10);
     const safeName = scan.website.name.replace(/[<>:"/\\|?*]/g, "-").slice(0, 60);
-    const filename = `broken-links-${safeName}-${dateLabel}.pdf`;
+    const filename = `coverage-${safeName}-${dateLabel}.pdf`;
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,

@@ -28,7 +28,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-              The unified website health dashboard. Monitor Core Web Vitals, accessibility, SEO, and security from a single pane of glass.
+              The unified website health dashboard. Monitor Core Web Vitals, accessibility, SEO, security, and coverage from a single pane of glass.
             </p>
             <div className="flex items-center gap-4 pt-2">
               <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-white/30 transition-colors" aria-label="X (Twitter)">

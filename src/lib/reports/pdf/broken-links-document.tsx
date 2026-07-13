@@ -26,24 +26,24 @@ function BrokenLinksDocument({ input }: { input: BrokenLinksReportInput }) {
   const headlineItems =
     uniqueBroken > 0
       ? [
-          `${uniqueBroken} broken URL${uniqueBroken === 1 ? "" : "s"} across ${input.pagesCrawled} page${input.pagesCrawled === 1 ? "" : "s"}`,
+          `${uniqueBroken} unreachable URL${uniqueBroken === 1 ? "" : "s"} across ${input.pagesCrawled} page${input.pagesCrawled === 1 ? "" : "s"}`,
           occurrenceCount > uniqueBroken
             ? `${occurrenceCount} page occurrence${occurrenceCount === 1 ? "" : "s"}`
-            : `${input.linksChecked} links checked · ${modeLabel}`,
+            : `${input.linksChecked} URLs checked · ${modeLabel}`,
           ...(input.findingsTruncated
             ? [
-                `Showing top ${input.groups.length} of ${uniqueBroken} broken URLs in this PDF`,
+                `Showing top ${input.groups.length} of ${uniqueBroken} unreachable URLs in this PDF`,
               ]
             : []),
         ]
-      : ["No broken links found"];
+      : ["No unreachable URLs found"];
 
   const summaryRows = [
     { setting: "Scan mode", value: modeLabel },
-    { setting: "Link types", value: formatResourceTypes(input.resourceTypes) },
+    { setting: "Resource types", value: formatResourceTypes(input.resourceTypes) },
     { setting: "Pages crawled", value: String(input.pagesCrawled) },
-    { setting: "Links checked", value: String(input.linksChecked) },
-    { setting: "Broken URLs", value: String(uniqueBroken) },
+    { setting: "URLs checked", value: String(input.linksChecked) },
+    { setting: "Unreachable URLs", value: String(uniqueBroken) },
     {
       setting: "Page occurrences",
       value: String(occurrenceCount),
@@ -67,15 +67,15 @@ function BrokenLinksDocument({ input }: { input: BrokenLinksReportInput }) {
     : `Findings (${input.groups.length})`;
 
   return (
-    <Document title={`Broken links — ${input.websiteName}`}>
+    <Document title={`Coverage — ${input.websiteName}`}>
       <Page size="A4" style={sharedStyles.page}>
         <PdfPageHeader
           websiteName={input.websiteName}
           websiteUrl={input.websiteUrl}
           scanDate={scanDate}
-          subtitle="Broken links report"
+          subtitle="Coverage report"
         />
-        <Text style={sharedStyles.h1}>Broken links report</Text>
+        <Text style={sharedStyles.h1}>Coverage report</Text>
 
         <PdfHeadlineBox
           title="Summary"

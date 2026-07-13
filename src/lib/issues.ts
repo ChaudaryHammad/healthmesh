@@ -13,7 +13,7 @@ export const CATEGORY_LABELS: Record<IssueCategory, string> = {
   ACCESSIBILITY: "Accessibility",
   SEO: "SEO",
   SECURITY: "Security",
-  BROKEN_LINKS: "Broken links",
+  BROKEN_LINKS: "Coverage",
 };
 
 export function computeIssueFingerprint(issue: {
@@ -33,7 +33,7 @@ export function categoryToAuditPath(websiteId: string, category: IssueCategory) 
     ACCESSIBILITY: `/dashboard/websites/${websiteId}/accessibility`,
     SEO: `/dashboard/websites/${websiteId}/seo`,
     SECURITY: `/dashboard/websites/${websiteId}/security`,
-    BROKEN_LINKS: `/dashboard/websites/${websiteId}/broken-links`,
+    BROKEN_LINKS: `/dashboard/websites/${websiteId}/coverage`,
   };
   return paths[category];
 }

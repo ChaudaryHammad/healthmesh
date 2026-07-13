@@ -1,6 +1,6 @@
 # LoopNode — Architecture
 
-> **Product:** Website health monitoring SaaS — performance, accessibility, SEO, security, broken links  
+> **Product:** Website health monitoring SaaS — performance, accessibility, SEO, security, coverage  
 > **Stack:** Next.js 16 · TypeScript · Prisma 7 · PostgreSQL · Auth.js v5 · Trigger.dev · Lighthouse · axe-core · Cloudinary
 
 Module completion status lives in [PROGRESS.md](./PROGRESS.md).
@@ -75,7 +75,7 @@ PostgreSQL (Scan, Issue, scores)
 - User halts scan → DB + Trigger run cancel via `audit-scan-control.ts`.
 - `run-audit` has `onCancel` / `onFailure` hooks to sync DB state.
 
-### Broken links
+### Coverage
 
 - Separate workflow: `POST /api/broken-links/[scanId]/execute` on Vercel.
 - Not on Trigger.dev yet; long crawls may timeout on free tier.

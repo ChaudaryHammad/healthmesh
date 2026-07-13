@@ -26,7 +26,7 @@ export const DASHBOARD_NAV: DashboardNavItem[] = [
     children: [
       { name: "All websites", href: "/dashboard/websites", icon: Globe },
       { name: "Monitoring", href: "/dashboard/monitoring", icon: Activity },
-      { name: "Broken links", href: "/dashboard/broken-links", icon: Link2 },
+      { name: "Coverage", href: "/dashboard/coverage", icon: Link2 },
     ],
   },
   { name: "Reports", href: "/dashboard/reports", icon: FileText },
@@ -41,7 +41,7 @@ export function isNavActive(pathname: string, href: string, exact?: boolean): bo
       pathname === "/dashboard/websites" ||
       pathname.startsWith("/dashboard/websites/") ||
       pathname.startsWith("/dashboard/monitoring") ||
-      pathname.startsWith("/dashboard/broken-links")
+      pathname.startsWith("/dashboard/coverage")
     );
   }
   return pathname === href || pathname.startsWith(`${href}/`);

@@ -333,7 +333,7 @@ export function WebsiteOverviewClient({
           : "NOT_AUDITED");
 
   const host = website.url.replace(/^https?:\/\//, "").split("/")[0];
-  const checkerHref = `/dashboard/websites/${website.id}/broken-links`;
+  const checkerHref = `/dashboard/websites/${website.id}/coverage`;
   const settingsHref = `/dashboard/websites/${website.id}/settings`;
   const monitoringHref = `/dashboard/websites/${website.id}/monitoring`;
   const linkScanRunning = latestBrokenLinkScan?.status === "RUNNING";
@@ -684,8 +684,8 @@ export function WebsiteOverviewClient({
 
           <section className={cn(SURFACE, "p-5 md:p-6 space-y-5")}>
             <SectionHeader
-              title="Broken links"
-              description="Crawl internal or external links"
+              title="Coverage"
+              description="Crawl pages, assets, and outbound URLs"
               action={
                 <ButtonLink href={checkerHref} variant="ghost" size="sm" className="h-8 px-2">
                   Open
@@ -709,7 +709,7 @@ export function WebsiteOverviewClient({
             ) : latestBrokenLinkScan ? (
               <div className="grid grid-cols-2 gap-3">
                 <StatTile
-                  label="Broken"
+                  label="Unreachable"
                   value={formatNumber(latestBrokenLinkScan.brokenCount)}
                   tone={latestBrokenLinkScan.brokenCount > 0 ? "bad" : "good"}
                 />
@@ -739,7 +739,7 @@ export function WebsiteOverviewClient({
             ) : (
               <div className="rounded-xl border border-dashed border-border/40 bg-secondary/5 p-5 text-center">
                 <Unlink className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-70" />
-                <p className="text-xs text-muted-foreground">No link scans yet</p>
+                <p className="text-xs text-muted-foreground">No coverage scans yet</p>
               </div>
             )}
 
@@ -749,14 +749,14 @@ export function WebsiteOverviewClient({
                 className="flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-secondary/5 px-3 py-2.5 text-sm font-medium hover:bg-secondary/15 transition-colors"
               >
                 <Globe className="w-4 h-4 text-muted-foreground" />
-                Internal crawl
+                Internal coverage
               </ReliableLink>
               <ReliableLink
                 href={checkerHref}
                 className="flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-secondary/5 px-3 py-2.5 text-sm font-medium hover:bg-secondary/15 transition-colors"
               >
                 <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                External check
+                External coverage
               </ReliableLink>
             </div>
           </section>

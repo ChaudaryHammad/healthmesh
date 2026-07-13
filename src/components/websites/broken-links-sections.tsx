@@ -112,7 +112,7 @@ const BROKEN_LINK_STEPS = [
   { id: "crawl", label: "Crawl", description: "Discover pages in scope" },
   { id: "collect", label: "Collect", description: "Extract links and assets" },
   { id: "verify", label: "Verify", description: "Check responses and retries" },
-  { id: "report", label: "Report", description: "Group results by broken URL" },
+  { id: "report", label: "Report", description: "Group results by unreachable URL" },
 ] as const;
 
 function formatElapsed(ms: number): string {
@@ -319,7 +319,7 @@ function BrokenLinkResultCard({ group }: { group: GroupedBrokenLink }) {
 
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
               <span>
-                Unique broken URL grouped across{" "}
+                Unique unreachable URL grouped across{" "}
                 <span className="font-medium text-foreground tabular-nums">
                   {group.occurrences.length}
                 </span>{" "}
@@ -335,7 +335,7 @@ function BrokenLinkResultCard({ group }: { group: GroupedBrokenLink }) {
           </div>
 
           <div className="flex shrink-0 items-center gap-1 pl-2">
-            <CopyIconButton text={group.href} label="broken URL" />
+            <CopyIconButton text={group.href} label="URL" />
             <Button
               variant="ghost"
               size="icon-sm"
@@ -365,7 +365,7 @@ function BrokenLinkResultCard({ group }: { group: GroupedBrokenLink }) {
                 What this row means
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                This result groups every occurrence of the same broken destination into one row so
+                This result groups every occurrence of the same unreachable destination into one row so
                 you can fix one URL and review all affected source pages together.
               </p>
             </div>
@@ -439,7 +439,7 @@ export function BrokenLinksPageShell({
               <Link2 className="size-5" />
             </div>
             <div className="space-y-2">
-              <CardTitle className="text-xl md:text-2xl">Broken links</CardTitle>
+              <CardTitle className="text-xl md:text-2xl">Coverage</CardTitle>
               <a
                 href={websiteUrl}
                 target="_blank"
@@ -450,7 +450,7 @@ export function BrokenLinksPageShell({
                 {websiteUrl.replace(/^https?:\/\//, "")}
               </a>
               <CardDescription className="max-w-2xl">
-                Find broken destinations, missing assets, and unreachable outbound links, then
+                Find unreachable pages, missing assets, and outbound URL failures, then
                 review every affected source page in one place.
               </CardDescription>
               <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -499,7 +499,7 @@ export function BrokenLinksMetricsGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <MetricCard
-        label="Unique broken URLs"
+        label="Unreachable URLs"
         value={formatNumber(brokenCount)}
         highlight={brokenCount > 0 ? "bad" : "good"}
         hint="Grouped by destination"
@@ -586,7 +586,7 @@ export function BrokenLinksProgressPanel({
               </span>
             </div>
             <p className="text-base font-medium leading-snug text-foreground md:text-lg">
-              {activeScan.statusMessage ?? "Checking your site for broken links…"}
+              {activeScan.statusMessage ?? "Running coverage scan…"}
             </p>
             <p className="text-xs text-muted-foreground">
               {phaseLabel(activeScan.phase)} · {progressScopeSummary(activeScan)}
@@ -619,7 +619,7 @@ export function BrokenLinksProgressPanel({
           />
           <MetricCard label="Links found" value={formatNumber(activeScan.linksFound)} />
           <MetricCard
-            label="Broken URLs"
+            label="Unreachable"
             value={formatNumber(activeScan.brokenCount)}
             highlight={activeScan.brokenCount > 0 ? "bad" : "good"}
           />
@@ -735,7 +735,7 @@ export function BrokenLinksSetupPanel({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
             <CardTitle className="text-base">
-              {scanComplete ? "Run another check" : "Start a broken-links check"}
+              {scanComplete ? "Run another scan" : "Start a coverage scan"}
             </CardTitle>
             <CardDescription>
               Choose what to scan, confirm the scope, and run a fresh crawl against your latest
@@ -785,7 +785,7 @@ export function BrokenLinksSetupPanel({
                 Accuracy notes
               </div>
               <ul className="space-y-1 text-xs text-muted-foreground">
-                <li>Broken destinations are grouped by URL so repeat occurrences stay aligned.</li>
+                <li>Unreachable destinations are grouped by URL so repeat occurrences stay aligned.</li>
                 <li>Network failures and timeouts can appear as unreachable links.</li>
                 <li>Stopped or failed runs may still show partial results.</li>
               </ul>
@@ -873,7 +873,7 @@ export function BrokenLinksSetupPanel({
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground">Ready to scan</p>
             <p className="text-xs text-muted-foreground">
-              Results will list each unique broken URL together with every source page where it was
+              Results will list each unique unreachable URL together with every source page where it was
               found.
             </p>
           </div>
@@ -884,7 +884,7 @@ export function BrokenLinksSetupPanel({
             disabled={isScanning || selectedTypes.length === 0}
           >
             {isStarting ? <Loader2 className="animate-spin" /> : <Play className="size-4 fill-current" />}
-            {isStarting ? "Starting…" : "Start check"}
+            {isStarting ? "Starting…" : "Start scan"}
           </Button>
         </div>
       </CardContent>
@@ -909,16 +909,16 @@ export function BrokenLinksResultsPanel({
     <div className="space-y-4">
       <div className="space-y-1">
         <h2 className="text-lg font-semibold text-foreground">
-          {hasResults ? "Broken links found" : "No broken links found"}
+          {hasResults ? "Unreachable URLs found" : "No unreachable URLs found"}
         </h2>
         <p className="text-sm text-muted-foreground">
           {hasResults
             ? `${filteredGroups.length} shown${
                 filteredGroups.length !== groups.length ? ` of ${groups.length}` : ""
-              } grouped broken URL${groups.length === 1 ? "" : "s"} across ${formatNumber(
+              } grouped unreachable URL${groups.length === 1 ? "" : "s"} across ${formatNumber(
                 occurrenceCount
               )} page occurrence${occurrenceCount === 1 ? "" : "s"}`
-            : `Checked ${formatNumber(linksChecked)} links and every verified response came back healthy.`}
+            : `Checked ${formatNumber(linksChecked)} URLs and every verified response came back healthy.`}
         </p>
       </div>
 
@@ -932,7 +932,7 @@ export function BrokenLinksResultsPanel({
                   <Input
                     value={resultSearch}
                     onChange={(event) => onSearchChange(event.target.value)}
-                    placeholder="Search broken URL, source page, or status code…"
+                    placeholder="Search URL, source page, or status code…"
                     className="h-10 bg-card pl-9"
                   />
                 </div>
@@ -969,7 +969,7 @@ export function BrokenLinksResultsPanel({
                 </div>
               </div>
               <div className="rounded-xl border border-border/25 bg-secondary/10 px-4 py-3 text-xs text-muted-foreground">
-                Each row below groups one broken destination URL. Expand a row to see every source
+                Each row below groups one unreachable destination URL. Expand a row to see every source
                 page where that destination was found.
               </div>
             </CardContent>
@@ -994,7 +994,7 @@ export function BrokenLinksResultsPanel({
       ) : (
         <SectionEmptyState
           icon={<Check className="size-5 text-emerald-400" />}
-          title="No broken links"
+          title="No unreachable URLs"
           description="Everything we verified responded successfully in this scan."
         />
       )}

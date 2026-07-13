@@ -463,7 +463,7 @@ export function BrokenLinksClient({
       const blobUrl = URL.createObjectURL(blob);
       const filename =
         parsePdfFilename(response.headers.get("Content-Disposition")) ??
-        `broken-links-${websiteName.replace(/[<>:"/\\|?*]/g, "-").slice(0, 60)}.pdf`;
+        `coverage-${websiteName.replace(/[<>:"/\\|?*]/g, "-").slice(0, 60)}.pdf`;
       setPdfBlobUrl(blobUrl);
       setPdfFilename(filename);
       return { blobUrl, filename };

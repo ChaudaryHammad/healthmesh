@@ -70,7 +70,7 @@ export default async function PricingPage() {
         PLAN_SCAN_SCHEDULING.STARTER,
         "No automated scheduling on Starter",
         "Performance, accessibility, SEO & security",
-        "Broken link checker (internal)",
+        "Coverage scanner (internal)",
         "30-day scan history",
         "Email support",
       ],
@@ -100,7 +100,7 @@ export default async function PricingPage() {
       features: [
         `Up to ${PLAN_SITE_LIMITS.AGENCY} websites`,
         PLAN_SCAN_SCHEDULING.AGENCY,
-        "Unlimited broken link crawl depth",
+        "Unlimited coverage crawl depth",
         "All Pro audit features",
         "1-year historical data",
         "Dedicated onboarding",

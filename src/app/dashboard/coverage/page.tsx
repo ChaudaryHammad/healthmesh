@@ -6,7 +6,11 @@ import { Link2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-export default async function BrokenLinksHubPage() {
+export const metadata = {
+  title: "Coverage",
+};
+
+export default async function CoverageHubPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -34,9 +38,10 @@ export default async function BrokenLinksHubPage() {
   return (
     <div className="w-full space-y-6">
       <div className="space-y-2">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Coverage</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Crawl summaries across your sites. Open a site to run a new internal or external link
-          check.
+          Crawl summaries across your sites. Open a site to run a new internal or external
+          coverage scan for pages, assets, and outbound URLs.
         </p>
       </div>
 
@@ -45,7 +50,7 @@ export default async function BrokenLinksHubPage() {
           <Link2 className="w-8 h-8 mx-auto text-muted-foreground mb-3" />
           <h2 className="text-lg font-semibold">No websites yet</h2>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
-            Connect a website to start checking for broken links.
+            Connect a website to start a coverage scan.
           </p>
           <Button render={<Link href="/dashboard/websites" />} nativeButton={false}>
             Go to websites
@@ -59,7 +64,7 @@ export default async function BrokenLinksHubPage() {
                 <tr className="border-b border-border/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
                   <th className="px-4 py-3 font-medium">Website</th>
                   <th className="px-4 py-3 font-medium">Last scan</th>
-                  <th className="px-4 py-3 font-medium">Broken</th>
+                  <th className="px-4 py-3 font-medium">Unreachable</th>
                   <th className="px-4 py-3 font-medium">Checked</th>
                   <th className="px-4 py-3 font-medium" />
                 </tr>
@@ -102,7 +107,7 @@ export default async function BrokenLinksHubPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          render={<Link href={`/dashboard/websites/${w.id}/broken-links`} />}
+                          render={<Link href={`/dashboard/websites/${w.id}/coverage`} />}
                           nativeButton={false}
                         >
                           Open

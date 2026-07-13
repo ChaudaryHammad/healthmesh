@@ -1,6 +1,6 @@
 # LoopNode — Project Progress
 
-> **Product:** LoopNode — website health monitoring SaaS (performance, accessibility, SEO, security, broken links)  
+> **Product:** LoopNode — website health monitoring SaaS (performance, accessibility, SEO, security, coverage)  
 > **Stack:** Next.js 16 · TypeScript · Prisma 7 · PostgreSQL · Auth.js v5 · shadcn/ui · Lighthouse · axe-core  
 > **Last updated:** July 2026
 
@@ -28,7 +28,7 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 | Website CRUD | ✅ | Add / edit / delete (soft delete), grid + table |
 | Audit engine | ✅ | Real Lighthouse, axe-core, SEO, security scans |
 | Audit report pages | ✅ | Performance, A11y, SEO, Security — rich category UIs |
-| Broken link checker | 🟡 | Full crawler + live progress; findings **not** persisted to DB |
+| Coverage scanner | 🟡 | Full crawler + live progress; findings **not** persisted to DB |
 | Billing & payments | 🟡 | Manual upgrade flow ✅; Stripe Elements planned — see [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Admin dashboard | ✅ | `/admin` — overview, users, websites, billing, newsletter, support inbox |
 | Scheduled scans | 🟡 | Trigger `scheduled-scans` cron + `nextScanAt`; Pro/Agency only |
@@ -136,7 +136,7 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 
 ---
 
-## 6. Broken link checker (separate from main audit)
+## 6. Coverage scanner (separate from main audit)
 
 | Item | Status | Details |
 |------|--------|---------|
@@ -213,7 +213,7 @@ Overview → Websites → [one site] → category pages (live detail)
 |-------------|----------|--------------|-------|
 | **Full audit report** | Site name, URL, date, overall score. Sections: Performance (vitals + top issues), Accessibility, SEO, Security (CSP grade). Appendix: full issue list by severity. | On-demand or auto after audit (Pro+) | All paid |
 | **Executive summary** | 1–2 pages: score, delta vs previous scan, critical count, top 5 fixes | On-demand | Pro+ |
-| **Broken links report** | Broken URL, status, source page, severity | After broken-link scan | Pro+ |
+| **Coverage report** | Unreachable URL, status, source page, severity | After coverage scan | Pro+ |
 | **Comparison report** | Two scans: score changes per category, new vs resolved issues | User picks scan A vs B | Pro+ |
 
 #### Reports page UI

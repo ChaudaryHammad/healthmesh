@@ -25,6 +25,7 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const websitesSectionActive =
     isNavActive(pathname, "/dashboard/websites") ||
     pathname.startsWith("/dashboard/monitoring") ||
+    pathname.startsWith("/dashboard/coverage") ||
     pathname.startsWith("/dashboard/broken-links");
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({

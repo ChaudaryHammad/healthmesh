@@ -12,7 +12,7 @@ interface Props {
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
   const w = await prisma.website.findUnique({ where: { id }, select: { name: true } });
-  return { title: `${w?.name ?? "Website"} — Broken Links` };
+  return { title: `${w?.name ?? "Website"} — Coverage` };
 }
 
 function serializeResults(

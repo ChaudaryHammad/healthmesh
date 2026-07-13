@@ -147,7 +147,7 @@ export async function POST(
       data: {
         userId: scan.website.userId,
         action: "BROKEN_LINK_SCAN_COMPLETED",
-        description: `Broken link scan (${scan.mode.toLowerCase()}) for "${scan.website.name}" — ${uniqueBrokenCount} broken URL(s), ${occurrenceCount} occurrence(s)`,
+        description: `Coverage scan (${scan.mode.toLowerCase()}) for "${scan.website.name}" — ${uniqueBrokenCount} unreachable URL(s), ${occurrenceCount} occurrence(s)`,
         metadata: {
           websiteId: scan.websiteId,
           scanId,

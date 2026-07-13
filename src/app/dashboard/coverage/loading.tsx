@@ -1,5 +1,5 @@
 import { BrokenLinksPageLoader } from "@/components/layout/page-loaders";
 
-export default function BrokenLinksLoading() {
+export default function CoverageHubLoading() {
   return <BrokenLinksPageLoader />;
 }

@@ -1,6 +1,6 @@
 # LoopNode
 
-Website health monitoring for developers and agencies — performance, accessibility, SEO, security, and broken links in one dashboard.
+Website health monitoring for developers and agencies — performance, accessibility, SEO, security, and coverage in one dashboard.
 
 ## Docs
 

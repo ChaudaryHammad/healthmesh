@@ -31,7 +31,7 @@ export function ScoreSummary({
     { name: "Accessibility", score: accessibility },
     { name: "SEO", score: seo },
     { name: "Security", score: security },
-    { name: "Broken Links", score: brokenLinks },
+    { name: "Coverage", score: brokenLinks },
   ];
 
   const hasScores = scannedCount > 0;
