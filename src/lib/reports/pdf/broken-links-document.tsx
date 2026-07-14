@@ -1,15 +1,16 @@
 import { Document, Page, Text } from "@react-pdf/renderer";
 import type { BrokenLinksReportInput } from "@/lib/reports/generate-broken-links-pdf";
 import { formatResourceTypes } from "@/lib/scanner/link-resource-types";
-import { LOOPNODE_BRAND } from "@/lib/reports/report-html-shared";
 import {
   GroupedBrokenLinksFindingTable,
-  PdfFooter,
+  PdfBrandHeader,
+  PdfFixedFooter,
   PdfHeadlineBox,
-  PdfPageHeader,
   PdfTable,
+  SummaryMetricsRow,
   sharedStyles,
 } from "@/lib/reports/pdf/components";
+import { colors } from "@/lib/reports/pdf/theme";
 import { renderReactPdfToBuffer } from "@/lib/reports/pdf/render-to-buffer";
 
 function formatCompletedDate(completedAt: string | null) {
@@ -31,9 +32,7 @@ function BrokenLinksDocument({ input }: { input: BrokenLinksReportInput }) {
             ? `${occurrenceCount} page occurrence${occurrenceCount === 1 ? "" : "s"}`
             : `${input.linksChecked} URLs checked · ${modeLabel}`,
           ...(input.findingsTruncated
-            ? [
-                `Showing top ${input.groups.length} of ${uniqueBroken} unreachable URLs in this PDF`,
-              ]
+            ? [`Showing top ${input.groups.length} of ${uniqueBroken} unreachable URLs in this PDF`]
             : []),
         ]
       : ["No unreachable URLs found"];
@@ -44,10 +43,7 @@ function BrokenLinksDocument({ input }: { input: BrokenLinksReportInput }) {
     { setting: "Pages crawled", value: String(input.pagesCrawled) },
     { setting: "URLs checked", value: String(input.linksChecked) },
     { setting: "Unreachable URLs", value: String(uniqueBroken) },
-    {
-      setting: "Page occurrences",
-      value: String(occurrenceCount),
-    },
+    { setting: "Page occurrences", value: String(occurrenceCount) },
   ];
 
   const groupRows = input.groups.map((group, index) => ({
@@ -68,21 +64,37 @@ function BrokenLinksDocument({ input }: { input: BrokenLinksReportInput }) {
 
   return (
     <Document title={`Coverage — ${input.websiteName}`}>
-      <Page size="A4" style={sharedStyles.page}>
-        <PdfPageHeader
+      <Page size="A4" style={sharedStyles.page} wrap>
+        <PdfBrandHeader
           websiteName={input.websiteName}
           websiteUrl={input.websiteUrl}
           scanDate={scanDate}
           subtitle="Coverage report"
         />
-        <Text style={sharedStyles.h1}>Coverage report</Text>
 
-        <PdfHeadlineBox
-          title="Summary"
-          items={headlineItems}
-          ok={uniqueBroken === 0}
+        <Text style={{ fontSize: 8, fontWeight: 700, color: colors.headerMuted, marginBottom: 4 }}>
+          COVERAGE REPORT
+        </Text>
+        <Text style={sharedStyles.h1}>{input.websiteName}</Text>
+        <Text style={{ fontSize: 8.5, color: colors.muted, marginBottom: 10 }}>
+          {input.websiteUrl} · {scanDate}
+        </Text>
+
+        <SummaryMetricsRow
+          items={[
+            {
+              label: "Unreachable",
+              value: String(uniqueBroken),
+              valueColor: uniqueBroken > 0 ? colors.critical : colors.scoreGood,
+            },
+            { label: "Pages crawled", value: String(input.pagesCrawled) },
+            { label: "URLs checked", value: String(input.linksChecked) },
+          ]}
         />
 
+        <PdfHeadlineBox title="Summary" items={headlineItems} ok={uniqueBroken === 0} />
+
+        <Text style={sharedStyles.h2}>Scan settings</Text>
         <PdfTable
           columns={[
             { key: "setting", label: "Setting", flex: 1 },
@@ -94,10 +106,7 @@ function BrokenLinksDocument({ input }: { input: BrokenLinksReportInput }) {
         <Text style={sharedStyles.h2}>{findingsHeading}</Text>
         <GroupedBrokenLinksFindingTable rows={groupRows} />
 
-        <PdfFooter
-          left={`${LOOPNODE_BRAND} · loopnode.app`}
-          right={input.websiteName}
-        />
+        <PdfFixedFooter contextLabel="Coverage" />
       </Page>
     </Document>
   );

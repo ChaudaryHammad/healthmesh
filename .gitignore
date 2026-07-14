@@ -43,3 +43,6 @@ next-env.d.ts
 /locales
 
 /src/generated/prisma
+
+# local verification artifacts
+/tmp

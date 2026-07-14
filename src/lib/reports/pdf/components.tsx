@@ -1,16 +1,25 @@
 import { StyleSheet, Text, View } from "@react-pdf/renderer";
 import { LOOPNODE_BRAND } from "@/lib/reports/report-html-shared";
-import { colors, fonts } from "@/lib/reports/pdf/theme";
+import { colors, fonts, scoreColor } from "@/lib/reports/pdf/theme";
 
 export const sharedStyles = StyleSheet.create({
   page: {
-    paddingTop: 44,
-    paddingBottom: 44,
-    paddingHorizontal: 48,
+    paddingTop: 32,
+    paddingBottom: 52,
+    paddingHorizontal: 40,
     fontFamily: fonts.body,
-    fontSize: 10,
+    fontSize: 9.5,
     color: colors.text,
-    lineHeight: 1.45,
+    lineHeight: 1.4,
+  },
+  coverPage: {
+    paddingTop: 32,
+    paddingBottom: 52,
+    paddingHorizontal: 40,
+    fontFamily: fonts.body,
+    fontSize: 9.5,
+    color: colors.text,
+    lineHeight: 1.4,
   },
   header: {
     flexDirection: "row",
@@ -49,29 +58,31 @@ export const sharedStyles = StyleSheet.create({
     lineHeight: 1.4,
   },
   meta: {
-    fontSize: 9,
+    fontSize: 8.5,
     color: colors.muted,
-    lineHeight: 1.55,
+    lineHeight: 1.4,
     textAlign: "right",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   metaStrong: {
     color: colors.text,
     fontWeight: 700,
   },
   h1: {
-    fontSize: 22,
+    fontSize: 16,
     fontWeight: 700,
-    marginBottom: 8,
+    marginBottom: 6,
+    color: colors.text,
   },
   h2: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 700,
-    marginTop: 24,
-    marginBottom: 10,
-    paddingBottom: 6,
+    marginTop: 12,
+    marginBottom: 6,
+    paddingBottom: 4,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.borderStrong,
+    color: colors.text,
   },
   footer: {
     marginTop: 32,
@@ -83,53 +94,99 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 7.5,
     color: colors.footer,
   },
+  fixedFooter: {
+    position: "absolute",
+    left: 40,
+    right: 40,
+    bottom: 16,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  fixedFooterText: {
+    fontSize: 7,
+    color: colors.footer,
+  },
+  brandHeader: {
+    marginBottom: 10,
+  },
+  brandAccentBar: {
+    height: 3,
+    backgroundColor: colors.borderStrong,
+    marginBottom: 8,
+  },
+  brandHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  brandWordmark: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: colors.headerText,
+    letterSpacing: -0.3,
+  },
+  brandSubtitle: {
+    fontSize: 7.5,
+    color: colors.headerMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.9,
+    marginTop: 2,
+  },
   headlineBox: {
     backgroundColor: colors.headlineBg,
     borderWidth: 1,
     borderColor: colors.headlineBorder,
-    borderRadius: 6,
-    padding: 14,
-    marginBottom: 20,
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 8,
   },
   headlineBoxOk: {
     backgroundColor: colors.okBg,
     borderColor: colors.okBorder,
   },
   headlineTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 700,
     textTransform: "uppercase",
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     color: colors.headlineText,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   headlineTitleOk: {
     color: colors.okTitle,
   },
   headlineItem: {
-    fontSize: 9.5,
+    fontSize: 8.5,
     color: colors.headlineItem,
-    marginBottom: 4,
+    marginBottom: 2,
+    lineHeight: 1.35,
   },
   headlineItemOk: {
     color: colors.okItem,
   },
   table: {
-    marginTop: 10,
-    marginBottom: 18,
+    marginTop: 4,
+    marginBottom: 8,
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: colors.headerBg,
-    borderBottomWidth: 2,
+    borderBottomWidth: 1,
     borderBottomColor: colors.borderStrong,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 6,
   },
   th: {
-    fontSize: 7.5,
+    fontSize: 7,
     textTransform: "uppercase",
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     color: colors.muted,
     fontWeight: 700,
   },
@@ -137,37 +194,177 @@ export const sharedStyles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    paddingVertical: 9,
-    paddingHorizontal: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 6,
     alignItems: "flex-start",
   },
   td: {
-    fontSize: 9,
-    paddingRight: 6,
+    fontSize: 8.5,
+    paddingRight: 4,
   },
   tdWrap: {
-    lineHeight: 1.45,
+    lineHeight: 1.35,
   },
   tdStrong: {
     fontWeight: 700,
   },
   tdMuted: {
-    fontSize: 8.5,
+    fontSize: 8,
     color: colors.muted,
-    marginTop: 2,
+    marginTop: 1,
   },
   mono: {
     fontFamily: fonts.mono,
-    fontSize: 8.5,
+    fontSize: 8,
     color: "#475569",
   },
   action: {
     color: colors.action,
-    fontSize: 9,
+    fontSize: 8.5,
   },
   empty: {
     color: colors.muted,
+    fontSize: 8.5,
+  },
+  scoreHeroWrap: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    marginBottom: 8,
+  },
+  scoreHeroMain: {
+    width: 110,
+    marginRight: 8,
+    backgroundColor: colors.headerBg,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 4,
+    padding: 8,
+  },
+  scoreHeroLabel: {
+    fontSize: 7,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    color: colors.headerMuted,
+    marginBottom: 2,
+  },
+  scoreHeroValue: {
+    fontSize: 26,
+    fontWeight: 700,
+    lineHeight: 1.05,
+  },
+  scoreHeroSub: {
+    fontSize: 7.5,
+    color: colors.muted,
+    marginTop: 2,
+  },
+  scoreCardRow: {
+    flexDirection: "row",
+    flexGrow: 1,
+  },
+  scoreCard: {
+    flexGrow: 1,
+    flexBasis: 0,
+    backgroundColor: colors.headerBg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    marginRight: 6,
+  },
+  scoreCardLast: {
+    marginRight: 0,
+  },
+  scoreCardLabel: {
+    fontSize: 6.5,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    color: colors.muted,
+    marginBottom: 2,
+  },
+  scoreCardValue: {
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  scoreCardDelta: {
+    fontSize: 7,
+    marginTop: 1,
+  },
+  metricStrip: {
+    flexDirection: "row",
+    marginBottom: 8,
+  },
+  metricChip: {
+    flexGrow: 1,
+    flexBasis: 0,
+    backgroundColor: colors.headerBg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    marginRight: 6,
+  },
+  metricChipLast: {
+    marginRight: 0,
+  },
+  metricChipLabel: {
+    fontSize: 6.5,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    color: colors.muted,
+    marginBottom: 2,
+  },
+  metricChipValue: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: colors.text,
+  },
+  findingCard: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent,
+    borderRadius: 3,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    marginBottom: 6,
+    backgroundColor: colors.surface,
+  },
+  findingCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  findingCardTitle: {
     fontSize: 9,
+    fontWeight: 700,
+    color: colors.text,
+    marginBottom: 2,
+    lineHeight: 1.3,
+  },
+  findingFieldLabel: {
+    fontSize: 6.5,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    color: colors.muted,
+    marginBottom: 1,
+    marginTop: 3,
+  },
+  severityPill: {
+    borderRadius: 2,
+    paddingVertical: 1,
+    paddingHorizontal: 4,
+    marginLeft: 6,
+  },
+  severityPillText: {
+    fontSize: 6.5,
+    fontWeight: 700,
+    letterSpacing: 0.2,
   },
 });
 
@@ -183,17 +380,42 @@ export function PdfPageHeader({
   subtitle?: string;
 }) {
   return (
-    <View style={sharedStyles.header}>
-      <View style={sharedStyles.headerBrand}>
-        <View style={sharedStyles.logoBlock}>
-          <Text style={sharedStyles.logo}>{LOOPNODE_BRAND}</Text>
+    <PdfBrandHeader
+      websiteName={websiteName}
+      websiteUrl={websiteUrl}
+      scanDate={scanDate}
+      subtitle={subtitle}
+    />
+  );
+}
+
+/** Gray slate brand header used across all redesigned PDF report types. */
+export function PdfBrandHeader({
+  websiteName,
+  websiteUrl,
+  scanDate,
+  subtitle = "Website audit report",
+}: {
+  websiteName: string;
+  websiteUrl: string;
+  scanDate: string;
+  subtitle?: string;
+}) {
+  return (
+    <View style={sharedStyles.brandHeader} fixed={false}>
+      <View style={sharedStyles.brandAccentBar} />
+      <View style={sharedStyles.brandHeaderRow}>
+        <View style={{ maxWidth: 280 }}>
+          <Text style={sharedStyles.brandWordmark}>{LOOPNODE_BRAND}</Text>
+          <Text style={sharedStyles.brandSubtitle}>{subtitle}</Text>
         </View>
-        <Text style={sharedStyles.logoSub}>{subtitle}</Text>
-      </View>
-      <View style={sharedStyles.headerMeta}>
-        <Text style={[sharedStyles.meta, sharedStyles.metaStrong]}>{websiteName}</Text>
-        <Text style={[sharedStyles.meta, sharedStyles.tdWrap]}>{pdfBreakableText(websiteUrl)}</Text>
-        <Text style={[sharedStyles.meta, { marginBottom: 0 }]}>{scanDate}</Text>
+        <View style={{ alignItems: "flex-end", maxWidth: 250 }}>
+          <Text style={[sharedStyles.meta, sharedStyles.metaStrong, { textAlign: "right" }]}>
+            {websiteName}
+          </Text>
+          <Text style={[sharedStyles.meta, { textAlign: "right" }]}>{websiteUrl}</Text>
+          <Text style={[sharedStyles.meta, { marginBottom: 0, textAlign: "right" }]}>{scanDate}</Text>
+        </View>
       </View>
     </View>
   );
@@ -204,6 +426,316 @@ export function PdfFooter({ left, right }: { left: string; right: string }) {
     <View style={sharedStyles.footer}>
       <Text>{left}</Text>
       <Text>{right}</Text>
+    </View>
+  );
+}
+
+/**
+ * Page-bottom footer. `fixed` pins it to every page bottom regardless of content height.
+ * Keep as a direct child of <Page>; page paddingBottom reserves space above it.
+ */
+export function PdfFixedFooter({ contextLabel }: { contextLabel?: string }) {
+  const left = `${LOOPNODE_BRAND} · loopnode.app${contextLabel ? ` · ${contextLabel}` : ""}`;
+  return (
+    <View style={sharedStyles.fixedFooter} fixed>
+      <Text style={sharedStyles.fixedFooterText}>{left}</Text>
+      <Text
+        style={sharedStyles.fixedFooterText}
+        render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
+      />
+    </View>
+  );
+}
+
+export type CoverSeverityCounts = {
+  critical: number;
+  major: number;
+  minor: number;
+  info: number;
+  total: number;
+};
+
+/** Dense title + severity strip for page 1 (site meta lives in PdfBrandHeader). */
+export function ReportIntro({
+  reportTitle,
+  overallScore,
+  severityCounts,
+}: {
+  reportTitle: string;
+  websiteName?: string;
+  websiteUrl?: string;
+  scanDate?: string;
+  overallScore: number | null;
+  severityCounts: CoverSeverityCounts;
+}) {
+  const scoreLabel =
+    overallScore === null || overallScore === undefined ? "—" : String(Math.round(overallScore));
+
+  const chips: Array<{ label: string; value: string; color?: string }> = [
+    { label: "Critical", value: String(severityCounts.critical), color: colors.critical },
+    { label: "Major", value: String(severityCounts.major), color: colors.major },
+    { label: "Minor", value: String(severityCounts.minor) },
+    { label: "Total", value: String(severityCounts.total) },
+  ];
+
+  return (
+    <View style={{ marginBottom: 10 }} wrap={false}>
+      <Text style={{ fontSize: 16, fontWeight: 700, color: colors.text, marginBottom: 8 }}>
+        {reportTitle}
+      </Text>
+
+      <View style={{ flexDirection: "row" }}>
+        <View
+          style={{
+            width: 100,
+            marginRight: 8,
+            backgroundColor: colors.headerBg,
+            borderWidth: 1,
+            borderColor: colors.borderStrong,
+            borderRadius: 4,
+            padding: 8,
+          }}
+        >
+          <Text style={sharedStyles.scoreHeroLabel}>Overall</Text>
+          <Text style={[sharedStyles.scoreHeroValue, { color: scoreColor(overallScore) }]}>
+            {scoreLabel}
+          </Text>
+          <Text style={sharedStyles.scoreHeroSub}>/ 100</Text>
+        </View>
+        <View style={{ flexGrow: 1, flexDirection: "row" }}>
+          {chips.map((chip, index) => {
+            const isLast = index === chips.length - 1;
+            return (
+              <View
+                key={chip.label}
+                style={{
+                  flexGrow: 1,
+                  flexBasis: 0,
+                  marginRight: isLast ? 0 : 6,
+                  backgroundColor: colors.headerBg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 4,
+                  paddingVertical: 8,
+                  paddingHorizontal: 6,
+                }}
+              >
+                <Text style={sharedStyles.metricChipLabel}>{chip.label}</Text>
+                <Text
+                  style={[
+                    sharedStyles.metricChipValue,
+                    ...(chip.color ? [{ color: chip.color }] : []),
+                  ]}
+                >
+                  {chip.value}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/** @deprecated Prefer ReportIntro */
+export function PdfCoverPage(props: {
+  websiteName: string;
+  websiteUrl: string;
+  scanDate: string;
+  overallScore: number | null;
+  severityCounts: CoverSeverityCounts;
+  reportTitle?: string;
+}) {
+  return (
+    <ReportIntro
+      reportTitle={props.reportTitle ?? "Full audit report"}
+      overallScore={props.overallScore}
+      severityCounts={props.severityCounts}
+    />
+  );
+}
+
+export type ScoreCardItem = {
+  label: string;
+  score: number | null;
+  delta?: number | null;
+};
+
+/** Overall score + category scores in one compact row. */
+export function ScoreHero({
+  overallScore,
+  overallDelta,
+  categories,
+  hideOverall = false,
+}: {
+  overallScore: number | null;
+  overallDelta?: number | null;
+  categories: ScoreCardItem[];
+  hideOverall?: boolean;
+}) {
+  const overallLabel =
+    overallScore === null || overallScore === undefined ? "—" : String(Math.round(overallScore));
+
+  return (
+    <View style={sharedStyles.scoreHeroWrap} wrap={false}>
+      {hideOverall ? null : (
+        <View style={sharedStyles.scoreHeroMain}>
+          <Text style={sharedStyles.scoreHeroLabel}>Overall</Text>
+          <Text style={[sharedStyles.scoreHeroValue, { color: scoreColor(overallScore) }]}>
+            {overallLabel}
+          </Text>
+          <Text style={sharedStyles.scoreHeroSub}>
+            {`/ 100${
+              overallDelta !== null && overallDelta !== undefined
+                ? ` · ${overallDelta >= 0 ? "+" : ""}${overallDelta}`
+                : ""
+            }`}
+          </Text>
+        </View>
+      )}
+      <View style={sharedStyles.scoreCardRow}>
+        {categories.map((item, index) => {
+          const value =
+            item.score === null || item.score === undefined ? "—" : String(Math.round(item.score));
+          const delta = item.delta;
+          const isLast = index === categories.length - 1;
+          return (
+            <View
+              key={item.label}
+              style={[sharedStyles.scoreCard, ...(isLast ? [sharedStyles.scoreCardLast] : [])]}
+            >
+              <Text style={sharedStyles.scoreCardLabel}>{item.label}</Text>
+              <Text style={[sharedStyles.scoreCardValue, { color: scoreColor(item.score) }]}>
+                {value}
+              </Text>
+              {delta !== null && delta !== undefined ? (
+                <Text
+                  style={[
+                    sharedStyles.scoreCardDelta,
+                    { color: delta >= 0 ? colors.scoreGood : colors.scoreBad },
+                  ]}
+                >
+                  {`${delta >= 0 ? "+" : ""}${delta}`}
+                </Text>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+export function SummaryMetricsRow({
+  items,
+}: {
+  items: Array<{ label: string; value: string; valueColor?: string }>;
+}) {
+  return (
+    <View style={sharedStyles.metricStrip} wrap={false}>
+      {items.map((item, index) => {
+        const isLast = index === items.length - 1;
+        return (
+          <View
+            key={item.label}
+            style={[sharedStyles.metricChip, ...(isLast ? [sharedStyles.metricChipLast] : [])]}
+          >
+            <Text style={sharedStyles.metricChipLabel}>{item.label}</Text>
+            <Text
+              style={[
+                sharedStyles.metricChipValue,
+                ...(item.valueColor ? [{ color: item.valueColor }] : []),
+              ]}
+            >
+              {item.value}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function severityPillColors(severity: string) {
+  const key = severity.toUpperCase();
+  if (key === "CRITICAL") {
+    return { bg: "#fef2f2", fg: colors.critical, border: colors.critical };
+  }
+  if (key === "MAJOR") {
+    return { bg: "#fffbeb", fg: colors.major, border: colors.major };
+  }
+  if (key === "MINOR") {
+    return { bg: colors.accentSoft, fg: colors.minor, border: colors.minor };
+  }
+  return { bg: colors.headerBg, fg: colors.info, border: colors.border };
+}
+
+export function SeverityPill({ severity }: { severity: string }) {
+  const { bg, fg } = severityPillColors(severity);
+  return (
+    <View style={[sharedStyles.severityPill, { backgroundColor: bg }]}>
+      <Text style={[sharedStyles.severityPillText, { color: fg }]}>{severity}</Text>
+    </View>
+  );
+}
+
+export type FindingCardRow = {
+  index: string;
+  severity: string;
+  title: string;
+  description: string;
+  location: string;
+  action: string;
+};
+
+function findingAccent(severity: string) {
+  const key = severity.toUpperCase();
+  if (key === "CRITICAL") return colors.critical;
+  if (key === "MAJOR") return colors.major;
+  if (key === "MINOR") return colors.minor;
+  return colors.borderStrong;
+}
+
+/**
+ * Compact finding rows. wrap enabled so cards don't jump to next page leaving
+ * large blank regions (wrap={false} caused empty Performance pages).
+ */
+export function FindingCardList({ rows }: { rows: FindingCardRow[] }) {
+  if (rows.length === 0) {
+    return <Text style={sharedStyles.empty}>No issues in this section.</Text>;
+  }
+
+  return (
+    <View style={{ marginTop: 2, marginBottom: 4 }}>
+      {rows.map((row) => (
+        <View
+          key={row.index}
+          style={[sharedStyles.findingCard, { borderLeftColor: findingAccent(row.severity) }]}
+          minPresenceAhead={36}
+        >
+          <View style={sharedStyles.findingCardHeader}>
+            <Text style={[sharedStyles.tdStrong, { fontSize: 8 }]}>#{row.index}</Text>
+            <SeverityPill severity={row.severity} />
+          </View>
+          <Text style={sharedStyles.findingCardTitle}>{row.title}</Text>
+          {row.description ? (
+            <Text style={[sharedStyles.tdMuted, sharedStyles.tdWrap]}>{row.description}</Text>
+          ) : null}
+          {row.location && row.location !== "—" ? (
+            <Text style={[sharedStyles.tdMuted, sharedStyles.tdWrap, { marginTop: 2 }]}>
+              <Text style={{ fontWeight: 700, color: colors.muted }}>Location: </Text>
+              {row.location}
+            </Text>
+          ) : null}
+          {row.action ? (
+            <Text style={[sharedStyles.action, sharedStyles.tdWrap, { marginTop: 3 }]}>
+              <Text style={{ fontWeight: 700 }}>Fix: </Text>
+              {row.action}
+            </Text>
+          ) : null}
+        </View>
+      ))}
     </View>
   );
 }
@@ -262,17 +794,16 @@ export type TableColumn = {
 };
 
 /**
- * Soft wrap helpers for react-pdf. Do not insert soft-hyphen (U+00AD).
- * Prefer natural URL boundaries; ZWSP (U+200B) for overflow-only wraps.
+ * Soft-wrap http(s) URL paths only. Leaves hostnames and surrounding prose intact
+ * so we don't get "https:/ / example.com".
  */
 export function pdfBreakableText(text: string): string {
   if (!text) return "—";
-  // Break AFTER separators that already look like natural wrap points.
-  // Never break on "-" — that produces alvahcon-tracting / www.- artifacts.
-  return text
-    .replace(/(https?:\/\/)/gi, "$1\u200b")
-    .replace(/([/?&#=_%])/g, "$1\u200b")
-    .replace(/(\.)(?=[A-Za-z0-9])/g, "$1\u200b");
+  return text.replace(
+    /(https?:\/\/[^\s/?#]+)([^\s]*)/gi,
+    (_full, host: string, rest: string) =>
+      host + String(rest).replace(/([/?&=_#])/g, "$1\u200b"),
+  );
 }
 
 export function PdfTable({

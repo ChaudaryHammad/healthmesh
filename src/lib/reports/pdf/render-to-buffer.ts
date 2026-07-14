@@ -3,18 +3,11 @@ import type { ReactElement } from "react";
 import { Font, renderToBuffer } from "@react-pdf/renderer";
 
 /**
- * react-pdf hyphenates by joining syllables with a visible "-".
- * Returning alternating char + empty string allows line breaks without painting hyphens.
- * Must be registered before any document render.
+ * Disable syllable hyphenation. The previous per-character callback caused
+ * visible gaps ("https:/ / example. com") and cut/weird text in PDF viewers.
+ * Long URLs wrap via soft breaks from pdfBreakableText instead.
  */
-Font.registerHyphenationCallback((word) => {
-  if (!word) return [""];
-  const parts: string[] = [""];
-  for (const char of word) {
-    parts.push(char, "");
-  }
-  return parts;
-});
+Font.registerHyphenationCallback((word) => [word]);
 
 export async function renderReactPdfToBuffer(
   document: ReactElement<DocumentProps>
