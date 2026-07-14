@@ -255,3 +255,71 @@ export async function acknowledgeIncidentAction(incidentId: string) {
   revalidatePath(`/dashboard/websites/${incident.monitor.websiteId}/monitoring`);
   return { success: true as const };
 }
+
+/** Cursor-paginated check history for the History tab (newest → older). */
+export async function getMonitorChecksAction(input: {
+  websiteId: string;
+  /** How many rows to return (default 10, max 50). */
+  take?: number;
+  /** ISO checkedAt of the oldest already-loaded row — load checks older than this. */
+  before?: string | null;
+  failuresOnly?: boolean;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false as const, error: "Unauthorized" };
+
+  const website = await requireOwnedWebsite(input.websiteId, session.user.id);
+  if (!website?.monitor) {
+    return { success: false as const, error: "Monitor not found." };
+  }
+
+  const take = Math.min(Math.max(input.take ?? 10, 1), 50);
+  const monitorId = website.monitor.id;
+  const beforeDate =
+    input.before && !Number.isNaN(Date.parse(input.before))
+      ? new Date(input.before)
+      : null;
+
+  const where = {
+    monitorId,
+    ...(input.failuresOnly
+      ? { result: { in: ["DOWN" as const, "ERROR" as const] } }
+      : {}),
+    ...(beforeDate ? { checkedAt: { lt: beforeDate } } : {}),
+  };
+
+  const [rows, total] = await Promise.all([
+    prisma.uptimeCheck.findMany({
+      where,
+      orderBy: { checkedAt: "desc" },
+      take: take + 1,
+      select: {
+        id: true,
+        result: true,
+        httpStatus: true,
+        latencyMs: true,
+        errorMessage: true,
+        checkedAt: true,
+      },
+    }),
+    prisma.uptimeCheck.count({ where }),
+  ]);
+
+  const hasMore = rows.length > take;
+  const page = hasMore ? rows.slice(0, take) : rows;
+
+  return {
+    success: true as const,
+    checks: page.map((c) => ({
+      id: c.id,
+      result: c.result,
+      httpStatus: c.httpStatus,
+      latencyMs: c.latencyMs,
+      errorMessage: c.errorMessage,
+      checkedAt: c.checkedAt.toISOString(),
+    })),
+    hasMore,
+    /** Remaining rows that match this query including the returned page. */
+    total,
+  };
+}

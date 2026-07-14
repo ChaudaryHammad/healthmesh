@@ -89,7 +89,7 @@ export default async function WebsiteMonitoringPage({ params }: Props) {
       }
     : null;
 
-  // Newest first from the query; the client re-orders as needed.
+  // Newest first; charts use the longer window, History starts with the latest 10.
   const checks: CheckRow[] = (website.monitor?.checks ?? []).map((c) => ({
     id: c.id,
     result: c.result,
@@ -98,6 +98,7 @@ export default async function WebsiteMonitoringPage({ params }: Props) {
     errorMessage: c.errorMessage,
     checkedAt: c.checkedAt.toISOString(),
   }));
+  const initialHistory = checks.slice(0, 10);
 
   const incidents: IncidentRow[] = (website.monitor?.incidents ?? []).map((i) => ({
     id: i.id,
@@ -115,6 +116,7 @@ export default async function WebsiteMonitoringPage({ params }: Props) {
       website={{ id: website.id, name: website.name, url: website.url }}
       monitor={monitor}
       checks={checks}
+      initialHistory={initialHistory}
       totalCheckCount={totalCheckCount}
       incidents={incidents}
       minIntervalSeconds={entitlements.minUptimeIntervalSeconds}

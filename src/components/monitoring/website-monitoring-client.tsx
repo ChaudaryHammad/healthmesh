@@ -8,8 +8,6 @@ import {
   Bell,
   BellRing,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   ExternalLink,
   Gauge,
   Globe,
@@ -37,6 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   acknowledgeIncidentAction,
   disableMonitorAction,
+  getMonitorChecksAction,
   pauseMonitorAction,
   runMonitorNowAction,
   upsertMonitorAction,
@@ -114,8 +113,10 @@ export type IncidentRow = {
 interface Props {
   website: { id: string; name: string; url: string };
   monitor: MonitorDetail | null;
-  /** Recent checks, newest first */
+  /** Recent checks for charts (newest first) */
   checks: CheckRow[];
+  /** First page of History — latest 10 checks */
+  initialHistory: CheckRow[];
   totalCheckCount: number;
   incidents: IncidentRow[];
   minIntervalSeconds: number;
@@ -124,7 +125,7 @@ interface Props {
 }
 
 const AUTO_REFRESH_MS = 30_000;
-const HISTORY_PAGE_SIZE = 12;
+const HISTORY_PAGE_SIZE = 10;
 
 /* ---------------------------------- time ---------------------------------- */
 
@@ -250,6 +251,7 @@ export function WebsiteMonitoringClient({
   website,
   monitor,
   checks,
+  initialHistory,
   totalCheckCount,
   incidents,
   minIntervalSeconds,
@@ -260,7 +262,12 @@ export function WebsiteMonitoringClient({
   const [pending, startTransition] = useTransition();
   const [tab, setTab] = useState("overview");
   const [historyFilter, setHistoryFilter] = useState<"all" | "failed">("all");
-  const [historyPage, setHistoryPage] = useState(0);
+  const [historyRows, setHistoryRows] = useState<CheckRow[]>(initialHistory);
+  const [historyHasMore, setHistoryHasMore] = useState(
+    totalCheckCount > initialHistory.length
+  );
+  const [historyTotal, setHistoryTotal] = useState(totalCheckCount);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<number>(() => Date.now());
 
   // Settings form — one state object with dirty tracking against server values.
@@ -297,34 +304,79 @@ export function WebsiteMonitoringClient({
     return () => clearInterval(id);
   }, []);
 
+  // Keep the top of History in sync when live refresh brings new checks,
+  // without dropping older pages the user already loaded.
+  useEffect(() => {
+    if (historyFilter !== "all") return;
+    setHistoryRows((prev) => {
+      const oldestInitial = initialHistory.at(-1);
+      const older = oldestInitial
+        ? prev.filter((c) => new Date(c.checkedAt) < new Date(oldestInitial.checkedAt))
+        : [];
+      const seen = new Set(initialHistory.map((c) => c.id));
+      const next = [...initialHistory, ...older.filter((c) => !seen.has(c.id))];
+      setHistoryHasMore(totalCheckCount > next.length);
+      return next;
+    });
+    setHistoryTotal(totalCheckCount);
+  }, [initialHistory, totalCheckCount, historyFilter]);
+
   const ascChecks = useMemo(() => [...checks].reverse(), [checks]);
 
-  const filteredChecks = useMemo(
-    () =>
-      historyFilter === "failed"
-        ? checks.filter((c) => c.result === "DOWN" || c.result === "ERROR")
-        : checks,
-    [checks, historyFilter]
-  );
-  const historyPageCount = Math.max(1, Math.ceil(filteredChecks.length / HISTORY_PAGE_SIZE));
-  const safeHistoryPage = Math.min(historyPage, historyPageCount - 1);
-  const pagedHistory = useMemo(
-    () =>
-      filteredChecks.slice(
-        safeHistoryPage * HISTORY_PAGE_SIZE,
-        (safeHistoryPage + 1) * HISTORY_PAGE_SIZE
-      ),
-    [filteredChecks, safeHistoryPage]
-  );
+  async function loadMoreHistory() {
+    if (historyLoading || !historyHasMore) return;
+    const before = historyRows.at(-1)?.checkedAt ?? null;
+    setHistoryLoading(true);
+    try {
+      const result = await getMonitorChecksAction({
+        websiteId: website.id,
+        take: HISTORY_PAGE_SIZE,
+        before,
+        failuresOnly: historyFilter === "failed",
+      });
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      setHistoryRows((prev) => {
+        const seen = new Set(prev.map((c) => c.id));
+        return [...prev, ...result.checks.filter((c) => !seen.has(c.id))];
+      });
+      setHistoryHasMore(result.hasMore);
+      // result.total = remaining rows older than the cursor (including this page)
+      setHistoryTotal(historyRows.length + result.total);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
 
-  const failedCount = useMemo(
-    () => checks.filter((c) => c.result === "DOWN" || c.result === "ERROR").length,
-    [checks]
-  );
-
-  function changeHistoryFilter(filter: "all" | "failed") {
+  async function changeHistoryFilter(filter: "all" | "failed") {
+    if (filter === historyFilter) return;
     setHistoryFilter(filter);
-    setHistoryPage(0);
+    setHistoryLoading(true);
+    try {
+      if (filter === "all") {
+        setHistoryRows(initialHistory);
+        setHistoryHasMore(totalCheckCount > initialHistory.length);
+        setHistoryTotal(totalCheckCount);
+        return;
+      }
+      const result = await getMonitorChecksAction({
+        websiteId: website.id,
+        take: HISTORY_PAGE_SIZE,
+        failuresOnly: true,
+      });
+      if (!result.success) {
+        toast.error(result.error);
+        setHistoryFilter("all");
+        return;
+      }
+      setHistoryRows(result.checks);
+      setHistoryHasMore(result.hasMore);
+      setHistoryTotal(result.total);
+    } finally {
+      setHistoryLoading(false);
+    }
   }
 
   const status = monitor
@@ -655,9 +707,9 @@ export function WebsiteMonitoringClient({
             </TabsTrigger>
             <TabsTrigger value="history" className="flex-none rounded-none px-4 pb-3 pt-1">
               History
-              {checks.length > 0 ? (
+              {totalCheckCount > 0 ? (
                 <span className="ml-1.5 text-muted-foreground tabular-nums">
-                  {checks.length}
+                  {totalCheckCount}
                 </span>
               ) : null}
             </TabsTrigger>
@@ -680,7 +732,7 @@ export function WebsiteMonitoringClient({
 
         {/* ------------------------------- Overview ------------------------------- */}
         <TabsContent value="overview" className="mt-0 w-full space-y-6 outline-none">
-          <section className="rounded-xl border border-border/40 bg-card px-5 py-4">
+          <section className="rounded-xl border border-border/40 bg-card p-5">
             <UptimeBars checks={checks} />
           </section>
 
@@ -724,28 +776,32 @@ export function WebsiteMonitoringClient({
               <div>
                 <h2 className="text-sm font-medium">Check history</h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {totalCheckCount > 0
-                    ? `${filteredChecks.length.toLocaleString()} recent check${filteredChecks.length === 1 ? "" : "s"} loaded · ${totalCheckCount.toLocaleString()} total`
+                  {historyTotal > 0
+                    ? `Showing ${historyRows.length} of ${historyTotal.toLocaleString()} checks`
                     : "Every probe result, newest first"}
                 </p>
               </div>
               <div className="inline-flex items-center gap-0.5 rounded-lg border border-border/40 bg-secondary/30 p-0.5">
                 <FilterPill
                   active={historyFilter === "all"}
-                  onClick={() => changeHistoryFilter("all")}
+                  onClick={() => void changeHistoryFilter("all")}
                 >
                   All
                 </FilterPill>
                 <FilterPill
                   active={historyFilter === "failed"}
-                  onClick={() => changeHistoryFilter("failed")}
+                  onClick={() => void changeHistoryFilter("failed")}
                 >
-                  Failures{failedCount > 0 ? ` (${failedCount})` : ""}
+                  Failures
                 </FilterPill>
               </div>
             </div>
 
-            {pagedHistory.length === 0 ? (
+            {historyLoading && historyRows.length === 0 ? (
+              <div className="flex items-center justify-center px-6 py-14">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : historyRows.length === 0 ? (
               <EmptyState>
                 {totalCheckCount === 0 ? (
                   <>
@@ -753,41 +809,33 @@ export function WebsiteMonitoringClient({
                     wait for the schedule.
                   </>
                 ) : (
-                  "No failed checks in the loaded history. Nice."
+                  "No failed checks. Nice."
                 )}
               </EmptyState>
             ) : (
               <>
-                <CheckTable rows={pagedHistory} />
-                {historyPageCount > 1 ? (
-                  <div className="flex items-center justify-between border-t border-border/30 px-5 py-3">
-                    <p className="text-xs tabular-nums text-muted-foreground">
-                      Page {safeHistoryPage + 1} of {historyPageCount}
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        disabled={safeHistoryPage === 0}
-                        onClick={() => setHistoryPage(safeHistoryPage - 1)}
-                      >
-                        <ChevronLeft className="h-3.5 w-3.5" />
-                        Newer
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        disabled={safeHistoryPage >= historyPageCount - 1}
-                        onClick={() => setHistoryPage(safeHistoryPage + 1)}
-                      >
-                        Older
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
+                <CheckTable rows={historyRows} />
+                <div className="flex items-center justify-between gap-3 border-t border-border/30 px-5 py-3">
+                  <p className="text-xs tabular-nums text-muted-foreground">
+                    {historyHasMore
+                      ? `${Math.max(historyTotal - historyRows.length, 0)} older available`
+                      : "End of history"}
+                  </p>
+                  {historyHasMore ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-xs"
+                      disabled={historyLoading}
+                      onClick={() => void loadMoreHistory()}
+                    >
+                      {historyLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : null}
+                      Load more
+                    </Button>
+                  ) : null}
+                </div>
               </>
             )}
           </section>
