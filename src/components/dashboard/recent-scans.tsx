@@ -1,15 +1,10 @@
 import React from "react";
 import Link from "next/link";
-import { Activity, ArrowRight, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Activity, ArrowRight, CheckCircle2, XCircle, AlertCircle, Loader2, Plus } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -39,28 +34,34 @@ function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "COMPLETED":
       return (
-        <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/20 text-emerald-500 uppercase text-[10px]">
+        <Badge
+          variant="outline"
+          className="border-emerald-500/20 bg-emerald-500/10 text-[10px] uppercase text-emerald-500"
+        >
           <CheckCircle2 />
           Success
         </Badge>
       );
     case "FAILED":
       return (
-        <Badge variant="destructive" className="uppercase text-[10px]">
+        <Badge variant="destructive" className="text-[10px] uppercase">
           <XCircle />
           Failed
         </Badge>
       );
     case "RUNNING":
       return (
-        <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/20 text-cyan-500 uppercase text-[10px] animate-pulse">
+        <Badge
+          variant="outline"
+          className="animate-pulse border-cyan-500/20 bg-cyan-500/10 text-[10px] uppercase text-cyan-500"
+        >
           <Loader2 className="animate-spin" />
           Auditing
         </Badge>
       );
     default:
       return (
-        <Badge variant="secondary" className="uppercase text-[10px]">
+        <Badge variant="secondary" className="text-[10px] uppercase">
           <AlertCircle />
           Pending
         </Badge>
@@ -84,11 +85,11 @@ function ScoreBadge({ score }: { score: number | null }) {
 
 export function RecentScans({ scans }: RecentScansProps) {
   return (
-    <Card className="rounded-3xl border-border/30 flex flex-col h-[380px]">
+    <Card className="flex h-[380px] flex-col rounded-2xl border-border/40">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <Activity className="w-4 h-4 text-primary" />
-          Recent Scans
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+          <Activity className="h-4 w-4 text-primary" />
+          Recent scans
         </CardTitle>
         {scans.length > 0 && (
           <Button
@@ -111,22 +112,31 @@ export function RecentScans({ scans }: RecentScansProps) {
               <TableRow>
                 <TableHead className="text-[10px] uppercase">Website</TableHead>
                 <TableHead className="text-[10px] uppercase">Status</TableHead>
-                <TableHead className="text-[10px] uppercase text-center">Score</TableHead>
-                <TableHead className="text-[10px] uppercase text-right">Date</TableHead>
+                <TableHead className="text-center text-[10px] uppercase">Score</TableHead>
+                <TableHead className="text-right text-[10px] uppercase">Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {scans.map((scan) => (
                 <TableRow key={scan.id}>
                   <TableCell className="max-w-[120px]">
-                    <span className="block font-semibold text-foreground truncate">{scan.website.name}</span>
-                    <span className="block text-[10px] text-muted-foreground truncate">
+                    <Link
+                      href={`/dashboard/websites/${scan.website.id}`}
+                      className="block truncate font-semibold text-foreground hover:text-primary"
+                    >
+                      {scan.website.name}
+                    </Link>
+                    <span className="block truncate text-[10px] text-muted-foreground">
                       {scan.website.url.replace(/^https?:\/\//, "")}
                     </span>
                   </TableCell>
-                  <TableCell><StatusBadge status={scan.status} /></TableCell>
-                  <TableCell className="text-center"><ScoreBadge score={scan.overallScore} /></TableCell>
-                  <TableCell className="text-right text-muted-foreground whitespace-nowrap">
+                  <TableCell>
+                    <StatusBadge status={scan.status} />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <ScoreBadge score={scan.overallScore} />
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-right text-muted-foreground">
                     {formatDateTime(scan.createdAt)}
                   </TableCell>
                 </TableRow>
@@ -134,9 +144,22 @@ export function RecentScans({ scans }: RecentScansProps) {
             </TableBody>
           </Table>
         ) : (
-          <div className="flex flex-col items-center justify-center text-center h-full text-muted-foreground space-y-2 py-10">
-            <Activity className="w-8 h-8 text-muted-foreground/40 animate-pulse" />
-            <p className="text-xs">No scan reports recorded yet.</p>
+          <div className="flex h-full flex-col items-center justify-center space-y-3 py-10 text-center text-muted-foreground">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/60">
+              <Activity className="h-5 w-5 text-muted-foreground/50" />
+            </div>
+            <p className="max-w-[220px] text-xs">
+              No scan reports yet. Add a website to run your first audit.
+            </p>
+            <Button
+              render={<Link href="/dashboard/websites" />}
+              nativeButton={false}
+              size="sm"
+              variant="outline"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add website
+            </Button>
           </div>
         )}
       </CardContent>

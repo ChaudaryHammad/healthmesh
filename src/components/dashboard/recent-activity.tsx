@@ -93,27 +93,27 @@ export function RecentActivity({ logs }: RecentActivityProps) {
   };
 
   return (
-    <Card className="rounded-3xl border-border/30 flex flex-col h-[380px]">
+    <Card className="flex h-[380px] flex-col rounded-2xl border-border/40">
       <CardHeader>
-        <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <Clock className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: "10s" }} />
-          Recent Activity
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+          <Clock className="h-4 w-4 text-primary" />
+          Recent activity
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 overflow-y-auto space-y-4 pr-1">
+      <CardContent className="flex-1 space-y-4 overflow-y-auto pr-1">
         {logs.length > 0 ? (
-          <div className="relative border-l border-border/20 pl-4 ml-2.5 space-y-5">
+          <div className="relative ml-2.5 space-y-5 border-l border-border/25 pl-4">
             {logs.map((log) => (
-              <div key={log.id} className="relative group">
-                <div className="absolute -left-[27.5px] top-0.5 flex items-center justify-center w-6 h-6 rounded-full bg-card border border-border/40 group-hover:border-border/80 transition-colors">
+              <div key={log.id} className="group relative">
+                <div className="absolute -left-[27.5px] top-0.5 flex h-6 w-6 items-center justify-center rounded-full border border-border/40 bg-card transition-colors group-hover:border-border/80">
                   {getActionIcon(log.action)}
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-foreground leading-tight">
+                  <p className="text-xs font-medium leading-tight text-foreground">
                     {formatActivityLabel(log.action, log.description)}
                   </p>
-                  <span className="block text-[10px] text-muted-foreground font-medium">
+                  <span className="block text-[10px] font-medium text-muted-foreground">
                     {formatRelativeTime(log.createdAt)}
                   </span>
                 </div>
@@ -121,9 +121,13 @@ export function RecentActivity({ logs }: RecentActivityProps) {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center text-center h-full text-muted-foreground space-y-2 py-10">
-            <Clock className="w-8 h-8 text-muted-foreground/40" />
-            <p className="text-xs">No recent activity yet.</p>
+          <div className="flex h-full flex-col items-center justify-center space-y-2 py-10 text-center text-muted-foreground">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/60">
+              <Clock className="h-5 w-5 text-muted-foreground/50" />
+            </div>
+            <p className="max-w-[220px] text-xs">
+              Activity like scans and website changes will show up here.
+            </p>
           </div>
         )}
       </CardContent>
