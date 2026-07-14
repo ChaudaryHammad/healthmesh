@@ -242,6 +242,7 @@ export async function acknowledgeIncidentAction(incidentId: string) {
       id: incidentId,
       monitor: { website: { userId: session.user.id, deletedAt: null } },
     },
+    include: { monitor: { select: { websiteId: true } } },
   });
   if (!incident) return { success: false as const, error: "Incident not found." };
 
@@ -251,5 +252,6 @@ export async function acknowledgeIncidentAction(incidentId: string) {
   });
 
   revalidatePath("/dashboard/monitoring");
+  revalidatePath(`/dashboard/websites/${incident.monitor.websiteId}/monitoring`);
   return { success: true as const };
 }
