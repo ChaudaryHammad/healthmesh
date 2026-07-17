@@ -23,8 +23,6 @@ import {
   TrendingUp,
   Square,
   Activity,
-  Monitor,
-  Smartphone,
 } from "lucide-react";
 import { ScoreGauge } from "./score-gauge";
 import { ScoreChart } from "./score-chart";
@@ -41,6 +39,7 @@ import {
   vitalRatingLabel,
 } from "@/lib/web-vitals";
 import { NextScanSchedule } from "@/components/websites/next-scan-schedule";
+import { DeviceToggle } from "@/components/websites/device-toggle";
 import { useAuditScan } from "@/hooks/use-audit-scan";
 import { AuditProgressPanel } from "@/components/websites/audit-progress-panel";
 import { cn } from "@/lib/utils";
@@ -396,34 +395,7 @@ export function WebsiteOverviewClient({
                 </Button>
               ) : (
                 <>
-                  <div
-                    className="flex items-center rounded-lg border border-border/40 p-0.5"
-                    role="group"
-                    aria-label="Lighthouse device"
-                  >
-                    <Button
-                      type="button"
-                      variant={scanDevice === "desktop" ? "secondary" : "ghost"}
-                      size="sm"
-                      className="h-9 gap-1.5 px-3"
-                      title="Desktop lab (default) — no CPU/network throttling"
-                      onClick={() => setScanDevice("desktop")}
-                    >
-                      <Monitor className="w-3.5 h-3.5" />
-                      <span className="text-xs">Desktop</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={scanDevice === "mobile" ? "secondary" : "ghost"}
-                      size="sm"
-                      className="h-9 gap-1.5 px-3"
-                      title="Mobile lab — slow 4G + 4x CPU throttle, matches Google's mobile default"
-                      onClick={() => setScanDevice("mobile")}
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                      <span className="text-xs">Mobile</span>
-                    </Button>
-                  </div>
+                  <DeviceToggle value={scanDevice} onChange={setScanDevice} />
                   <Button
                     size="lg"
                     onClick={() => void startScan(scanDevice)}
