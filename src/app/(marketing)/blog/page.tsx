@@ -1,16 +1,33 @@
 import React from "react";
 import Link from "next/link";
 import { blogPosts } from "@/lib/marketing/blog-posts";
+import { marketingMetadata } from "@/lib/marketing/seo";
+import { JsonLd } from "@/components/marketing/json-ld";
+import { breadcrumbJsonLd } from "@/lib/marketing/json-ld";
 
-export const metadata = {
-  title: "Blog",
+export const metadata = marketingMetadata({
+  title: "Website Health Blog — Performance, A11y, SEO & Security",
   description:
-    "Notes on website reliability, Core Web Vitals, accessibility, SEO, and security from the Health Mesh team.",
-};
+    "Practical guides on Core Web Vitals, WCAG accessibility, technical SEO, security headers, uptime, and broken links from the Health Mesh team.",
+  path: "/blog",
+  keywords: [
+    "website health blog",
+    "Core Web Vitals guide",
+    "WCAG checklist",
+    "technical SEO tips",
+    "security headers guide",
+  ],
+});
 
 export default function BlogPage() {
   return (
     <div className="flex-1">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Blog", path: "/blog" },
+        ])}
+      />
       <div className="ln-container py-20 md:py-28">
         <div className="max-w-2xl">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ln-muted)]">

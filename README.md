@@ -1,4 +1,4 @@
-# LoopNode
+# Health Mesh
 
 Website health monitoring for developers and agencies — performance, accessibility, SEO, security, and coverage in one dashboard.
 

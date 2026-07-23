@@ -1,4 +1,4 @@
-# LoopNode — Architecture
+# Health Mesh — Architecture
 
 > **Product:** Website health monitoring SaaS — performance, accessibility, SEO, security, coverage  
 > **Stack:** Next.js 16 · TypeScript · Prisma 7 · PostgreSQL · Auth.js v5 · Trigger.dev · Lighthouse · axe-core · Cloudinary

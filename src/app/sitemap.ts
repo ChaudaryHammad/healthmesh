@@ -1,16 +1,11 @@
 import type { MetadataRoute } from "next";
 import { blogPosts } from "@/lib/marketing/blog-posts";
-
-function siteUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    ""
-  );
-}
+import { getSiteUrl } from "@/lib/marketing/site";
+import { parseBlogDateToIso } from "@/lib/marketing/json-ld";
 
 /** Public marketing URLs only — no dashboard, admin, auth, or share routes. */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = siteUrl();
+  const base = getSiteUrl();
   const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -31,7 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${base}/blog`,
       lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.85,
     },
     {
       url: `${base}/contact`,
@@ -61,9 +56,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
     url: `${base}/blog/${post.slug}`,
-    lastModified: now,
+    lastModified: new Date(parseBlogDateToIso(post.date)),
     changeFrequency: "monthly",
-    priority: 0.6,
+    priority: 0.7,
   }));
 
   return [...staticPages, ...blogEntries];

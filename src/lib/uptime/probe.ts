@@ -39,7 +39,7 @@ async function executeProbe(
       redirect: input.followRedirects === false ? "manual" : "follow",
       signal: controller.signal,
       headers: {
-        "User-Agent": "HealthMeshUptime/1.0 (+https://loopnode.app)",
+        "User-Agent": "HealthMeshUptime/1.0",
         Accept: "*/*",
       },
       cache: "no-store",

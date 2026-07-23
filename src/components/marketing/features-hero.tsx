@@ -10,7 +10,7 @@ export function FeaturesHero() {
       <Reveal>
         <Eyebrow>Features</Eyebrow>
         <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold tracking-tight text-[var(--ln-ink)] md:text-5xl md:leading-[1.1]">
-          Continuous site intelligence.
+          Website monitoring for uptime, performance, SEO & security.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ln-muted)] md:text-lg">
           Crawl, classify, and rank what breaks — uptime, accessibility,

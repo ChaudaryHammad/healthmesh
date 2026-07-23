@@ -10,12 +10,22 @@ import {
 } from "@/lib/plans";
 import { MarketingButton } from "@/components/marketing/primitives";
 import { cn } from "@/lib/utils";
+import { marketingMetadata } from "@/lib/marketing/seo";
+import { JsonLd } from "@/components/marketing/json-ld";
+import { breadcrumbJsonLd, faqPageJsonLd } from "@/lib/marketing/json-ld";
 
-export const metadata = {
-  title: "Pricing",
+export const metadata = marketingMetadata({
+  title: "Pricing & Free Trial — Website Monitoring Plans",
   description:
-    "Health Mesh pricing — 14-day free trial, then upgrade from your dashboard with bank transfer, mobile wallet, or other payment options.",
-};
+    "Health Mesh pricing for Starter, Pro, and Agency. Start a 14-day free trial, then upgrade from your dashboard with bank transfer or mobile wallet.",
+  path: "/pricing",
+  keywords: [
+    "website monitoring pricing",
+    "uptime monitoring plans",
+    "website audit tool pricing",
+    "Health Mesh free trial",
+  ],
+});
 
 const UPGRADE_STEPS = [
   {
@@ -31,6 +41,33 @@ const UPGRADE_STEPS = [
     body: "Complete payment, submit your transaction ID, and we activate within 1–2 business days.",
   },
 ] as const;
+
+const PRICING_FAQS = [
+  {
+    question: "Which plans include automated scan scheduling?",
+    answer:
+      "Starter is manual only. Pro and Agency unlock daily, weekly, or monthly scheduling per website.",
+  },
+  {
+    question: "Which plans include report generation?",
+    answer:
+      "Starter includes dashboard audits. PDF and CSV report generation is available on Pro and Agency.",
+  },
+  {
+    question: "Is there a free trial?",
+    answer: `Yes. Every new account gets 14 days on Starter (up to ${PLAN_SITE_LIMITS.STARTER} websites). No card required.`,
+  },
+  {
+    question: "How do I pay after the trial?",
+    answer:
+      "After you register, go to Settings → Billing → Upgrade plan. Choose a plan, complete payment, and submit your reference.",
+  },
+  {
+    question: "What payment methods do you accept?",
+    answer:
+      "Bank transfer, mobile wallets, and similar methods shown in your dashboard. Payments are verified manually before activation.",
+  },
+];
 
 export default async function PricingPage() {
   const session = await auth();
@@ -64,36 +101,25 @@ export default async function PricingPage() {
     },
   ];
 
-  const faqs = [
-    {
-      question: "Which plans include automated scan scheduling?",
-      answer:
-        "Starter is manual only. Pro and Agency unlock daily, weekly, or monthly scheduling per website.",
-    },
-    {
-      question: "Which plans include report generation?",
-      answer:
-        "Starter includes dashboard audits. PDF and CSV report generation is available on Pro and Agency.",
-    },
-    {
-      question: "Is there a free trial?",
-      answer: `Yes. Every new account gets 14 days on Starter (up to ${PLAN_SITE_LIMITS.STARTER} websites). No card required.`,
-    },
-    {
-      question: "How do I pay after the trial?",
-      answer: isLoggedIn
-        ? "Open Settings → Billing → Upgrade plan. Choose a plan, pay using the instructions shown, then submit your transaction ID."
-        : "After you register, go to Settings → Billing → Upgrade plan. Choose a plan, complete payment, and submit your reference.",
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer:
-        "Bank transfer, mobile wallets, and similar methods shown in your dashboard. Payments are verified manually before activation.",
-    },
-  ];
+  const faqs = PRICING_FAQS.map((faq) =>
+    faq.question === "How do I pay after the trial?" && isLoggedIn
+      ? {
+          ...faq,
+          answer:
+            "Open Settings → Billing → Upgrade plan. Choose a plan, pay using the instructions shown, then submit your transaction ID.",
+        }
+      : faq
+  );
 
   return (
     <div className="flex-1">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Pricing", path: "/pricing" },
+        ])}
+      />
+      <JsonLd data={faqPageJsonLd(PRICING_FAQS)} />
       <div className="ln-container py-20 md:py-28">
         <div className="max-w-2xl">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ln-muted)]">

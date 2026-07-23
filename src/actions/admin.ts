@@ -431,7 +431,7 @@ export async function exportNewsletterCsvAction() {
     success: true,
     data: {
       csv: ["Email,Subscribed At", ...rows].join("\n"),
-      filename: `loopnode-newsletter-${new Date().toISOString().slice(0, 10)}.csv`,
+      filename: `healthmesh-newsletter-${new Date().toISOString().slice(0, 10)}.csv`,
     },
   };
 }

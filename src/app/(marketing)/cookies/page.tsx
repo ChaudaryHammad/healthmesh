@@ -1,12 +1,14 @@
 import React from "react";
 import Link from "next/link";
 import { LegalMailto, LegalPage } from "@/components/marketing/legal-page";
+import { marketingMetadata } from "@/lib/marketing/seo";
 
-export const metadata = {
+export const metadata = marketingMetadata({
   title: "Cookie Policy",
   description:
     "How Health Mesh uses cookies and similar technologies on our website and product.",
-};
+  path: "/cookies",
+});
 
 export default function CookiesPage() {
   return (
@@ -59,7 +61,7 @@ export default function CookiesPage() {
             protect account access
           </li>
           <li>
-            <strong>loopnode-cookie-consent:</strong> stores whether you accepted or
+            <strong>healthmesh-cookie-consent:</strong> stores whether you accepted or
             declined non-essential cookies
           </li>
           <li>

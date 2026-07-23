@@ -92,7 +92,7 @@ export function renderPageHeader(
   return `
     <div class="header">
       <div>
-        <div class="logo">${LOOPNODE_BRAND}</div>
+        <div class="logo">${HEALTHMESH_BRAND}</div>
         <div class="logo-sub">${escapeHtml(subtitle)}</div>
       </div>
       <div class="meta">

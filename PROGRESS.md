@@ -1,6 +1,6 @@
-# LoopNode — Project Progress
+# Health Mesh — Project Progress
 
-> **Product:** LoopNode — website health monitoring SaaS (performance, accessibility, SEO, security, coverage)  
+> **Product:** Health Mesh — website health monitoring SaaS (performance, accessibility, SEO, security, coverage)  
 > **Stack:** Next.js 16 · TypeScript · Prisma 7 · PostgreSQL · Auth.js v5 · shadcn/ui · Lighthouse · axe-core  
 > **Last updated:** July 2026
 
@@ -21,7 +21,7 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Marketing site | ✅ | LoopNode branding, real copy, pricing tiers, full blog articles |
+| Marketing site | ✅ | Health Mesh branding, real copy, pricing tiers, full blog articles |
 | Auth & accounts | ✅ | Register, login, verify email, forgot/reset password |
 | Email (SMTP) | ✅ | Nodemailer + HTML templates (no Resend) |
 | User dashboard | ✅ | Overview stats, recent scans, activity log |
@@ -47,13 +47,13 @@ Use this file to track what is **done**, **partial**, or **not started**. Update
 
 | Item | Status | Details |
 |------|--------|---------|
-| Landing page (`/`) | ✅ | LoopNode hero, real features, trial CTA, no dummy testimonials |
+| Landing page (`/`) | ✅ | Health Mesh hero, real features, trial CTA, no dummy testimonials |
 | Features (`/features`) | ✅ | Accurate audit capabilities, wide layout |
 | Pricing (`/pricing`) | ✅ | Starter / Pro / Agency — **marketing only** until billing ships |
 | Blog list + posts (`/blog`) | ✅ | 3 full articles via `src/lib/marketing/blog-posts.ts` |
 | Contact (`/contact`) | ✅ | Form → SMTP; shadcn form components |
 | Newsletter signup | ✅ | Footer form + subscribe / unsubscribe flow |
-| Header / footer branding | ✅ | LoopNode everywhere |
+| Header / footer branding | ✅ | Health Mesh everywhere |
 | UI components | ✅ | shadcn/ui on all marketing + auth pages |
 
 ---

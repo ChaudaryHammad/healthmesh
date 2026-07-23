@@ -2,7 +2,7 @@ import type { BrokenLinkFinding } from "@/lib/reports/generate-broken-links-pdf"
 import { formatResourceTypes } from "@/lib/scanner/link-resource-types";
 import {
   escapeHtml,
-  LOOPNODE_BRAND,
+  HEALTHMESH_BRAND,
   renderFooter,
   renderPageHeader,
   wrapDocument,
@@ -97,7 +97,7 @@ export function renderBrokenLinksHtml(input: BrokenLinksHtmlInput) {
 
   body += `<h2>Findings (${input.findings.length})</h2>`;
   body += renderFindingsTable(input.findings);
-  body += renderFooter(`${LOOPNODE_BRAND} · loopnode.app`, input.websiteName);
+  body += renderFooter(HEALTHMESH_BRAND, input.websiteName);
   body += `</div>`;
 
   return wrapDocument(`Coverage — ${input.websiteName}`, body);

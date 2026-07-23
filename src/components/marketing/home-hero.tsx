@@ -41,7 +41,7 @@ export function HomeHero({ isLoggedIn }: { isLoggedIn: boolean }) {
           transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           className="mt-6 max-w-3xl font-display text-3xl font-medium leading-[1.1] text-[var(--ln-ink-soft)] sm:text-4xl md:text-5xl"
         >
-          Know before your users do.
+          Website health monitoring — know before your users do.
         </motion.h1>
 
         <motion.p
@@ -50,8 +50,8 @@ export function HomeHero({ isLoggedIn }: { isLoggedIn: boolean }) {
           transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
           className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ln-muted)] md:text-lg"
         >
-          Continuous monitoring for downtime, accessibility, SSL, and production
-          health — so your product stays up and usable for everyone.
+          Continuous checks for uptime, Core Web Vitals, accessibility, SEO,
+          security headers, and broken links — so production stays reliable.
         </motion.p>
 
         <motion.div

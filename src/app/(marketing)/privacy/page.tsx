@@ -1,12 +1,14 @@
 import React from "react";
 import Link from "next/link";
 import { LegalMailto, LegalPage } from "@/components/marketing/legal-page";
+import { marketingMetadata } from "@/lib/marketing/seo";
 
-export const metadata = {
+export const metadata = marketingMetadata({
   title: "Privacy Policy",
   description:
     "How Health Mesh collects, uses, stores, and shares personal information when you use our website monitoring service.",
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

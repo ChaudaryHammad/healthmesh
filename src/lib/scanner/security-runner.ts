@@ -74,7 +74,7 @@ export async function runSecurityAudit(
       method: "GET",
       redirect: "follow",
       signal: AbortSignal.timeout(15000),
-      headers: { "User-Agent": "HealthMesh/1.0 (+https://loopnode.dev)" },
+      headers: { "User-Agent": "HealthMesh/1.0" },
     });
   } catch (err) {
     issues.push({

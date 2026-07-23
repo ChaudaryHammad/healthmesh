@@ -32,7 +32,7 @@ async function fetchText(url: string): Promise<string | null> {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: {
-        "User-Agent": "HealthMesh-Coverage/2.0 (+https://loopnode.dev)",
+        "User-Agent": "HealthMesh-Coverage/2.0",
         Accept: "application/xml,text/xml,*/*",
       },
       redirect: "follow",

@@ -1,12 +1,14 @@
 import React from "react";
 import Link from "next/link";
 import { LegalMailto, LegalPage } from "@/components/marketing/legal-page";
+import { marketingMetadata } from "@/lib/marketing/seo";
 
-export const metadata = {
+export const metadata = marketingMetadata({
   title: "Terms of Service",
   description:
     "The terms that govern access to and use of Health Mesh’s website monitoring and audit platform.",
-};
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (
@@ -205,7 +207,7 @@ export default function TermsPage() {
       <section>
         <h2>10. Disclaimers</h2>
         <p>
-          TO THE MAXIMUM EXTENT PERMITTED BY LAW, LOOPNODE IS PROVIDED “AS IS” AND “AS
+          TO THE MAXIMUM EXTENT PERMITTED BY LAW, HEALTH MESH IS PROVIDED “AS IS” AND “AS
           AVAILABLE,” WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR
           STATUTORY, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
           PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
@@ -220,7 +222,7 @@ export default function TermsPage() {
       <section>
         <h2>11. Limitation of liability</h2>
         <p>
-          TO THE MAXIMUM EXTENT PERMITTED BY LAW, LOOPNODE AND ITS AFFILIATES,
+          TO THE MAXIMUM EXTENT PERMITTED BY LAW, HEALTH MESH AND ITS AFFILIATES,
           OFFICERS, EMPLOYEES, AND AGENTS WILL NOT BE LIABLE FOR ANY INDIRECT,
           INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR ANY
           LOSS OF PROFITS, REVENUE, DATA, GOODWILL, OR BUSINESS INTERRUPTION, ARISING
@@ -228,7 +230,7 @@ export default function TermsPage() {
         </p>
         <p>
           OUR TOTAL LIABILITY FOR ANY CLAIM ARISING OUT OF OR RELATING TO THESE TERMS
-          OR THE SERVICE WILL NOT EXCEED THE AMOUNTS YOU PAID TO LOOPNODE FOR THE
+          OR THE SERVICE WILL NOT EXCEED THE AMOUNTS YOU PAID TO HEALTH MESH FOR THE
           SERVICE IN THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING RISE TO THE
           CLAIM. IF YOU USE ONLY A FREE TRIAL OR FREE FEATURES, OUR TOTAL LIABILITY
           WILL NOT EXCEED ONE HUNDRED U.S. DOLLARS (US $100).

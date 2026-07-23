@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "@react-pdf/renderer";
-import { LOOPNODE_BRAND } from "@/lib/reports/report-html-shared";
+import { HEALTHMESH_BRAND } from "@/lib/reports/report-html-shared";
 import { colors, fonts, scoreColor } from "@/lib/reports/pdf/theme";
 
 export const sharedStyles = StyleSheet.create({
@@ -406,7 +406,7 @@ export function PdfBrandHeader({
       <View style={sharedStyles.brandAccentBar} />
       <View style={sharedStyles.brandHeaderRow}>
         <View style={{ maxWidth: 280 }}>
-          <Text style={sharedStyles.brandWordmark}>{LOOPNODE_BRAND}</Text>
+          <Text style={sharedStyles.brandWordmark}>{HEALTHMESH_BRAND}</Text>
           <Text style={sharedStyles.brandSubtitle}>{subtitle}</Text>
         </View>
         <View style={{ alignItems: "flex-end", maxWidth: 250 }}>
@@ -435,7 +435,7 @@ export function PdfFooter({ left, right }: { left: string; right: string }) {
  * Keep as a direct child of <Page>; page paddingBottom reserves space above it.
  */
 export function PdfFixedFooter({ contextLabel }: { contextLabel?: string }) {
-  const left = `${LOOPNODE_BRAND} · loopnode.app${contextLabel ? ` · ${contextLabel}` : ""}`;
+  const left = `${HEALTHMESH_BRAND}${contextLabel ? ` · ${contextLabel}` : ""}`;
   return (
     <View style={sharedStyles.fixedFooter} fixed>
       <Text style={sharedStyles.fixedFooterText}>{left}</Text>

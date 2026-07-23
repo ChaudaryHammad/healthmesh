@@ -5,6 +5,13 @@ import { ArrowLeft } from "lucide-react";
 import { blogPosts, getBlogPost } from "@/lib/marketing/blog-posts";
 import { BlogArticle } from "@/components/marketing/blog-article";
 import { MarketingButton } from "@/components/marketing/primitives";
+import { marketingMetadata } from "@/lib/marketing/seo";
+import { JsonLd } from "@/components/marketing/json-ld";
+import {
+  blogPostingJsonLd,
+  breadcrumbJsonLd,
+  parseBlogDateToIso,
+} from "@/lib/marketing/json-ld";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -17,11 +24,19 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const post = getBlogPost(slug);
-  if (!post) return { title: "Post Not Found" };
-  return {
+  if (!post) return { title: "Post Not Found", robots: { index: false } };
+
+  const iso = parseBlogDateToIso(post.date);
+  return marketingMetadata({
     title: post.title,
     description: post.description,
-  };
+    path: `/blog/${post.slug}`,
+    type: "article",
+    publishedTime: iso,
+    modifiedTime: iso,
+    authors: [post.author],
+    keywords: [post.category, "website health", "Health Mesh", post.title],
+  });
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
@@ -31,6 +46,14 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <div className="flex-1">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Blog", path: "/blog" },
+          { name: post.title, path: `/blog/${post.slug}` },
+        ])}
+      />
+      <JsonLd data={blogPostingJsonLd(post)} />
       <div className="ln-container max-w-3xl py-16 md:py-24">
         <Link
           href="/blog"
@@ -40,20 +63,25 @@ export default async function BlogPostPage({ params }: PageProps) {
           Blog
         </Link>
 
-        <article className="mt-10">
+        <article className="mt-10" itemScope itemType="https://schema.org/BlogPosting">
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--ln-muted)]">
             {post.category}
           </p>
-          <h1 className="mt-4 font-display text-3xl font-medium leading-tight tracking-tight md:text-5xl">
+          <h1
+            className="mt-4 font-display text-3xl font-medium leading-tight tracking-tight md:text-5xl"
+            itemProp="headline"
+          >
             {post.title}
           </h1>
           <div className="mt-5 flex flex-wrap gap-4 font-mono text-xs text-[var(--ln-faint)]">
-            <span>{post.author}</span>
-            <span>{post.date}</span>
+            <span itemProp="author">{post.author}</span>
+            <time dateTime={parseBlogDateToIso(post.date)} itemProp="datePublished">
+              {post.date}
+            </time>
             <span>{post.readTime}</span>
           </div>
 
-          <div className="mt-10 border-t border-[var(--ln-line)] pt-10">
+          <div className="mt-10 border-t border-[var(--ln-line)] pt-10" itemProp="articleBody">
             <BlogArticle content={post.content} />
           </div>
         </article>

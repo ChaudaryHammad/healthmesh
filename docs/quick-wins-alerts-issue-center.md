@@ -8,7 +8,7 @@
 
 ## 1. Goal
 
-Make LoopNode something users **come back to** and get value from without opening every site manually.
+Make Health Mesh something users **come back to** and get value from without opening every site manually.
 
 We will ship **three connected pieces**:
 
@@ -58,7 +58,7 @@ Uptime emails already exist. We **reuse that pattern** for scan regressions (det
 **Before**
 
 1. Redeploy client site.
-2. Manually open LoopNode → pick site → run audit (or wait for schedule).
+2. Manually open Health Mesh → pick site → run audit (or wait for schedule).
 3. Open several category pages / Issue Center and mentally compare to last week.
 4. Often skip this → regressions ship unnoticed.
 

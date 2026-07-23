@@ -7,7 +7,7 @@ import { getHeadlineIssues } from "@/lib/reports/report-highlights";
 import {
   escapeHtml,
   formatScanDate,
-  LOOPNODE_BRAND,
+  HEALTHMESH_BRAND,
   renderFooter,
   renderPageHeader,
   wrapDocument,
@@ -192,7 +192,7 @@ function renderCategoryReport(context: ReportScanContext, category: IssueCategor
   }
   body += `<h2>All ${categoryLabel(category).toLowerCase()} findings (${categoryIssues.length})</h2>`;
   body += renderIssuesTable(categoryIssues);
-  body += renderFooter(`${LOOPNODE_BRAND} · loopnode.app`, categoryLabel(category));
+  body += renderFooter(HEALTHMESH_BRAND, categoryLabel(category));
   body += `</div>`;
 
   return wrapDocument(`${title} — ${website.name}`, body);
@@ -213,7 +213,7 @@ export function renderFullAuditHtml(context: ReportScanContext) {
   body += `<h2>Core Web Vitals (lab)</h2>${renderVitalsTable(scan)}`;
   body += `<h2>All findings (${sorted.length})</h2>`;
   body += renderIssuesTable(sorted);
-  body += renderFooter(`${LOOPNODE_BRAND} · loopnode.app`, website.name);
+  body += renderFooter(HEALTHMESH_BRAND, website.name);
   body += `</div>`;
 
   for (const [category, issues] of Object.entries(grouped)) {
@@ -223,7 +223,7 @@ export function renderFullAuditHtml(context: ReportScanContext) {
     body += renderHeadlineBlock(scan.issues, category as IssueCategory);
     body += renderIssuesTable(issues, issueIndex);
     issueIndex += issues.length;
-    body += renderFooter(LOOPNODE_BRAND, categoryLabel(category as Issue["category"]));
+    body += renderFooter(HEALTHMESH_BRAND, categoryLabel(category as Issue["category"]));
     body += `</div>`;
   }
 
@@ -248,7 +248,7 @@ export function renderExecutiveSummaryHtml(context: ReportScanContext) {
   body += `<h2>Category scores</h2>${renderScoresTable(context, true)}`;
   body += `<h2>Priority fixes (${topIssues.length})</h2>`;
   body += renderIssuesTable(topIssues);
-  body += renderFooter(`${LOOPNODE_BRAND} · loopnode.app`, "Executive summary");
+  body += renderFooter(HEALTHMESH_BRAND, "Executive summary");
   body += `</div>`;
 
   return wrapDocument(`Summary — ${website.name}`, body);
