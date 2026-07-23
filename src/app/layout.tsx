@@ -3,8 +3,10 @@ import { headers } from "next/headers";
 import { Geist, Geist_Mono, Sora } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppToaster } from "@/components/ui/app-toaster";
+import { PwaRegister } from "@/components/pwa/pwa-register";
 import { THEME_BOOT_SCRIPT } from "@/lib/security/csp";
 import { DEFAULT_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/marketing/site";
+import { BRAND_ICONS } from "@/lib/brand-icons";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,8 +47,32 @@ export const metadata: Metadata = {
   creator: SITE_NAME,
   publisher: SITE_NAME,
   category: "technology",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f2f3f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0C10" },
+  ],
   icons: {
-    icon: "/healthmesh-mark.svg",
+    icon: [
+      { url: BRAND_ICONS.faviconIco, sizes: "48x48" },
+      { url: BRAND_ICONS.favicon16, sizes: "16x16", type: "image/png" },
+      { url: BRAND_ICONS.favicon32, sizes: "32x32", type: "image/png" },
+      { url: BRAND_ICONS.icon192, sizes: "192x192", type: "image/png" },
+      { url: BRAND_ICONS.icon512, sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: BRAND_ICONS.appleTouch, sizes: "180x180", type: "image/png" }],
+    shortcut: BRAND_ICONS.faviconIco,
+  },
+  manifest: BRAND_ICONS.manifest,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: SITE_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
   openGraph: {
     type: "website",
@@ -55,11 +81,20 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} — Website Health Monitoring`,
     description: DEFAULT_DESCRIPTION,
+    images: [
+      {
+        url: BRAND_ICONS.social,
+        width: 512,
+        height: 512,
+        alt: `${SITE_NAME} logo`,
+      },
+    ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: `${SITE_NAME} — Website Health Monitoring`,
     description: DEFAULT_DESCRIPTION,
+    images: [BRAND_ICONS.social],
   },
   robots: {
     index: true,
@@ -97,6 +132,7 @@ export default async function RootLayout({
       >
         <ThemeProvider defaultTheme="dark">
           {children}
+          <PwaRegister />
           <AppToaster />
         </ThemeProvider>
       </body>

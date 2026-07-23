@@ -1,4 +1,5 @@
 import { getSiteUrl, SITE_NAME, SITE_TAGLINE, DEFAULT_DESCRIPTION } from "@/lib/marketing/site";
+import { BRAND_ICONS } from "@/lib/brand-icons";
 
 export function organizationJsonLd() {
   const site = getSiteUrl();
@@ -7,7 +8,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: SITE_NAME,
     url: site,
-    logo: `${site}/healthmesh-mark.svg`,
+    logo: `${site}${BRAND_ICONS.icon512}`,
     description: DEFAULT_DESCRIPTION,
     email: "loopenode@gmail.com",
     sameAs: [],
@@ -99,7 +100,7 @@ export function blogPostingJsonLd(post: {
       name: SITE_NAME,
       logo: {
         "@type": "ImageObject",
-        url: `${site}/healthmesh-mark.svg`,
+        url: `${site}${BRAND_ICONS.icon512}`,
       },
     },
     mainEntityOfPage: {

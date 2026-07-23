@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CookieBanner } from "@/components/marketing/cookie-banner";
 import { ScrollToTop } from "@/components/layout/scroll-to-top";
+import { PwaInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 import { JsonLd } from "@/components/marketing/json-ld";
 import {
   organizationJsonLd,
@@ -24,6 +25,7 @@ export default function MarketingLayout({
       <main className="flex flex-1 flex-col">{children}</main>
       <Footer />
       <CookieBanner />
+      <PwaInstallPrompt />
       <ScrollToTop />
     </div>
   );

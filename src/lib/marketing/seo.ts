@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SITE_NAME, getSiteUrl } from "@/lib/marketing/site";
+import { BRAND_ICONS } from "@/lib/brand-icons";
 
 type MarketingMetaInput = {
   title: string;
@@ -30,6 +31,12 @@ export function marketingMetadata({
   const site = getSiteUrl();
   const url = path === "/" ? site : `${site}${path.startsWith("/") ? path : `/${path}`}`;
   const ogTitle = absoluteTitle ? title : `${title} | ${SITE_NAME}`;
+  const ogImage = {
+    url: BRAND_ICONS.social,
+    width: 512,
+    height: 512,
+    alt: `${SITE_NAME} logo`,
+  };
 
   return {
     title: absoluteTitle ? { absolute: title } : title,
@@ -48,14 +55,16 @@ export function marketingMetadata({
       siteName: SITE_NAME,
       title: ogTitle,
       description,
+      images: [ogImage],
       ...(publishedTime ? { publishedTime } : {}),
       ...(modifiedTime ? { modifiedTime } : {}),
       ...(authors?.length ? { authors } : {}),
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title: ogTitle,
       description,
+      images: [BRAND_ICONS.social],
     },
   };
 }
