@@ -24,12 +24,13 @@ export function PwaRegister() {
     };
 
     // Defer so it doesn't compete with first paint / hydration.
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(() => {
+    const idle = window.requestIdleCallback;
+    if (typeof idle === "function") {
+      idle(() => {
         void register();
       });
     } else {
-      window.setTimeout(() => {
+      setTimeout(() => {
         void register();
       }, 1200);
     }

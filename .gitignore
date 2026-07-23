@@ -46,3 +46,7 @@ next-env.d.ts
 
 # local verification artifacts
 /tmp
+
+# docs — keep local only, do not push
+*.md
+
